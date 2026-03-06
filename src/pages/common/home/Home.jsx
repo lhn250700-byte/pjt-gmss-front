@@ -13,6 +13,7 @@ import {
   getWeeklyPopularPosts,
 } from '../../../api/bbsApi';
 import { useAuthStore } from '../../../store/auth.store';
+import { bbsApi } from './../../../api/backendApi';
 
 const mobileLogo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png';
 const nomal_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png';
