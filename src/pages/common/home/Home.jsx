@@ -112,42 +112,42 @@ const Home = () => {
     };
   }, []);
 
-  // 커뮤니티 인기글 DB 연동 (실시간/주간 API, 월간·추천순은 주간 데이터 활용)
-  useEffect(() => {
-    let cancelled = false;
-    setLoadingPopular(true);
-    const apiCall = communityMode === 'realtime' ? bbsApi.getPopularRealtime() : bbsApi.getPopularWeekly();
-    apiCall
-      .then((res) => {
-        if (cancelled) return;
-        const arr = Array.isArray(res)
-          ? res
-          : (res?.content ?? res?.data ?? (res && typeof res === 'object' && !Array.isArray(res) ? [] : []));
-        const rawList = Array.isArray(arr) ? arr : [];
-        let items = rawList.slice(0, 10).map((p) => ({
-          id: p.bbsId ?? p.id,
-          title: p.title ?? '',
-          likes: p.bbsLikeCount ?? p.likes ?? 0,
-          views: p.views ?? 0,
-          commentCount: p.commentCount ?? 0,
-          postScore: p.postScore ?? 0,
-        }));
-        if (communityMode === 'recommend' && items.length > 0) {
-          items = [...items].sort((a, b) => (b.postScore ?? 0) - (a.postScore ?? 0));
-        }
-        setCommunityTopPosts(items);
-      })
-      .catch((err) => {
-        if (!cancelled) setCommunityTopPosts([]);
-        console.warn('[Home] 인기글 로드 실패:', err?.message ?? err);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingPopular(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [communityMode]);
+  // // 커뮤니티 인기글 DB 연동 (실시간/주간 API, 월간·추천순은 주간 데이터 활용)
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   setLoadingPopular(true);
+  //   const apiCall = communityMode === 'realtime' ? bbsApi.getPopularRealtime() : bbsApi.getPopularWeekly();
+  //   apiCall
+  //     .then((res) => {
+  //       if (cancelled) return;
+  //       const arr = Array.isArray(res)
+  //         ? res
+  //         : (res?.content ?? res?.data ?? (res && typeof res === 'object' && !Array.isArray(res) ? [] : []));
+  //       const rawList = Array.isArray(arr) ? arr : [];
+  //       let items = rawList.slice(0, 10).map((p) => ({
+  //         id: p.bbsId ?? p.id,
+  //         title: p.title ?? '',
+  //         likes: p.bbsLikeCount ?? p.likes ?? 0,
+  //         views: p.views ?? 0,
+  //         commentCount: p.commentCount ?? 0,
+  //         postScore: p.postScore ?? 0,
+  //       }));
+  //       if (communityMode === 'recommend' && items.length > 0) {
+  //         items = [...items].sort((a, b) => (b.postScore ?? 0) - (a.postScore ?? 0));
+  //       }
+  //       setCommunityTopPosts(items);
+  //     })
+  //     .catch((err) => {
+  //       if (!cancelled) setCommunityTopPosts([]);
+  //       console.warn('[Home] 인기글 로드 실패:', err?.message ?? err);
+  //     })
+  //     .finally(() => {
+  //       if (!cancelled) setLoadingPopular(false);
+  //     });
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [communityMode]);
 
   const chipClass = (active) =>
     `border px-3 py-1.5 rounded-[18px] text-[12px] cursor-pointer transition-all ${

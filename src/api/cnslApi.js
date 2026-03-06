@@ -79,12 +79,9 @@ export const getCnslPriceWithTypeName = async (email) => {
 };
 
 // 상담사 리스트 불러오기
-export const getCounselorList = async ({ page, size }) => {
+export const getCounselorList = async (params) => {
   const { data } = await authApi.get('/api/counselorList', {
-    params: {
-      page,
-      size,
-    },
+    params: params,
   });
 
   return data;

@@ -4,6 +4,19 @@ import { getCounselorList } from '../../../api/cnslApi';
 
 const ITEMS_PER_PAGE = 10;
 
+const categoryMap = {
+  job: 2,
+  career: 3,
+};
+
+const methodMap = {
+  board: 1,
+  phone: 2,
+  chat: 4,
+  video: 5,
+  visit: 6,
+};
+
 const CounselorList = () => {
   const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
@@ -64,15 +77,35 @@ const CounselorList = () => {
     const fetchCounselors = async () => {
       try {
         setLoading(true);
-        const filters = {
-          category: selectedCategories,
-          method: selectedMethods,
-          priceRange: selectedPriceRanges,
-        };
+
+        const cnslCate =
+          selectedCategories.length > 0 ? selectedCategories.map((cat) => String(categoryMap[cat])) : null;
+        const cnslTp = selectedMethods.length > 0 ? selectedMethods.map((method) => String(methodMap[method])) : null;
+        let minPrice = null;
+        let maxPrice = null;
+
+        if (selectedPriceRanges.length > 0) {
+          const prices = selectedPriceRanges.map((range) => {
+            const [min, max] = range.split('-').map((v) => (v ? Number(v) : null));
+            return { min, max };
+          });
+
+          minPrice = Math.min(...prices.map((p) => p.min).filter((v) => v !== null));
+
+          const maxValues = prices.map((p) => p.max).filter((v) => v !== null);
+          maxPrice = maxValues.length > 0 ? Math.max(...maxValues) : null;
+        }
+
+        console.log('cate tesaaaaaaaaaaaaaaaat', cnslCate);
+        console.log('tp tesaaaaaaaat', cnslTp);
 
         const data = await getCounselorList({
           page: 0,
           size: ITEMS_PER_PAGE,
+          cnslCate: cnslCate,
+          cnslTp: cnslTp,
+          minPrice: minPrice,
+          maxPrice: maxPrice,
         });
 
         console.log(data);
@@ -88,15 +121,11 @@ const CounselorList = () => {
     fetchCounselors();
   }, [selectedCategories, selectedMethods, selectedPriceRanges, page]);
 
-  const categoryToTag = useMemo(
-    () => ({
-      psychology: '심리',
-      job: '취업',
-      career: '커리어',
-      love: '연애',
-    }),
-    [],
-  );
+  useEffect(() => {
+    console.log('selectedCategories:', selectedCategories);
+    console.log('selectedMethods:', selectedMethods);
+    console.log('selectedPriceRanges:', selectedPriceRanges);
+  }, [selectedCategories, selectedMethods, selectedPriceRanges]);
 
   // 필터 토글 함수들
   const toggleCategory = (cat) => {
@@ -113,49 +142,6 @@ const CounselorList = () => {
     setSelectedPriceRanges((prev) => (prev.includes(range) ? prev.filter((r) => r !== range) : [...prev, range]));
     setPage(1);
   };
-
-  // TODO: DB 연동 시 서버에서 필터링된 결과를 받아옴
-  // 현재는 클라이언트에서 필터링
-  const filteredCounselors = useMemo(() => {
-    let result = counselors;
-
-    // 카테고리 필터
-    if (selectedCategories.length > 0) {
-      result = result.filter((item) => {
-        const tags = selectedCategories.map((cat) => categoryToTag[cat]);
-        return tags.some((tag) => item?.tags?.includes(tag));
-      });
-    }
-
-    // 상담 방식 필터
-    if (selectedMethods.length > 0) {
-      result = result.filter((item) => {
-        return selectedMethods.every((method) => {
-          if (method === 'chat') return item?.prices.chat > 0;
-          if (method === 'call') return item?.prices.call > 0;
-          if (method === 'visit') return item?.prices.visit > 0;
-          return false;
-        });
-      });
-    }
-
-    // 가격 범위 필터
-    if (selectedPriceRanges.length > 0) {
-      result = result.filter((item) => {
-        const minPrice = Math.min(item?.prices.chat, item?.prices.call, item?.prices.visit);
-        return selectedPriceRanges.some((range) => {
-          const [min, max] = range.split('-').map(Number);
-          if (max) {
-            return minPrice >= min && minPrice <= max;
-          } else {
-            return minPrice >= min; // 50000원 이상
-          }
-        });
-      });
-    }
-
-    return result;
-  }, [selectedCategories, selectedMethods, selectedPriceRanges, categoryToTag]);
 
   const safePage = Math.min(page, totalPages);
 
@@ -185,7 +171,6 @@ const CounselorList = () => {
                 {[
                   { id: 'job', label: '취업' },
                   { id: 'career', label: '커리어' },
-                  { id: 'psychology', label: '심리' },
                 ].map((cat) => (
                   <button
                     key={cat.id}
@@ -208,9 +193,11 @@ const CounselorList = () => {
               <label className="block text-[13px] font-semibold text-[#374151] mb-2">상담 방식</label>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { id: 'chat', label: '채팅' },
-                  { id: 'call', label: '전화' },
-                  { id: 'visit', label: '방문' },
+                  { id: 'board', label: '게시판', type: '1' },
+                  { id: 'phone', label: '전화', type: '2' },
+                  { id: 'chat', label: '채팅', type: '4' },
+                  { id: 'video', label: '화상', type: '5' },
+                  { id: 'visit', label: '방문', type: '6' },
                 ].map((method) => (
                   <button
                     key={method.id}
@@ -364,9 +351,8 @@ const CounselorList = () => {
                 <h3 className="text-lg font-bold text-gray-800 mb-4">상담 유형</h3>
                 <div className="space-y-2">
                   {[
-                    { id: 'job', label: '취업' },
-                    { id: 'career', label: '커리어' },
-                    { id: 'psychology', label: '심리' },
+                    { id: 'job', label: '취업', type: 2 },
+                    { id: 'career', label: '커리어', type: 3 },
                   ].map((cat) => (
                     <label key={cat.id} className={checkboxClass(selectedCategories.includes(cat.id))}>
                       <input
@@ -387,9 +373,11 @@ const CounselorList = () => {
                 <h3 className="text-lg font-bold text-gray-800 mb-4">상담 방식</h3>
                 <div className="space-y-2">
                   {[
-                    { id: 'chat', label: '채팅' },
-                    { id: 'call', label: '전화' },
-                    { id: 'visit', label: '방문' },
+                    { id: 'board', label: '게시판', type: '1' },
+                    { id: 'phone', label: '전화', type: '2' },
+                    { id: 'chat', label: '채팅', type: '4' },
+                    { id: 'video', label: '화상', type: '5' },
+                    { id: 'visit', label: '방문', type: '6' },
                   ].map((method) => (
                     <label key={method.id} className={checkboxClass(selectedMethods.includes(method.id))}>
                       <input
@@ -463,21 +451,30 @@ const CounselorList = () => {
                         </div>
                         {/* <p className="text-base text-gray-600 mb-4">{item?.tags.map((tag) => `#${tag}`).join(' ')}</p> */}
                         <p className="text-base text-gray-700 mb-6 leading-relaxed">{item?.text}</p>
-                        <div className="grid grid-cols-3 gap-6 text-base text-gray-800">
+
+                        <div className="grid grid-cols-4 gap-6 text-base text-gray-800">
                           <div className="flex items-center gap-2 bg-green-50 px-4 py-3 rounded-lg">
                             <span className="w-3 h-3 rounded-full bg-[#22c55e]" />
                             <span className="font-semibold">채팅</span>
                             <span className="ml-auto">{item?.cnsl4Price?.toLocaleString()}원</span>
                           </div>
+
                           <div className="flex items-center gap-2 bg-blue-50 px-4 py-3 rounded-lg">
                             <span className="w-3 h-3 rounded-full bg-[#60a5fa]" />
                             <span className="font-semibold">전화</span>
                             <span className="ml-auto">{item?.cnsl2Price?.toLocaleString()}원</span>
                           </div>
+
+                          <div className="flex items-center gap-2 bg-purple-50 px-4 py-3 rounded-lg">
+                            <span className="w-3 h-3 rounded-full bg-[#a78bfa]" />
+                            <span className="font-semibold">화상</span>
+                            <span className="ml-auto">{item?.cnsl5Price?.toLocaleString()}원</span>
+                          </div>
+
                           <div className="flex items-center gap-2 bg-orange-50 px-4 py-3 rounded-lg">
                             <span className="w-3 h-3 rounded-full bg-[#fb923c]" />
                             <span className="font-semibold">방문</span>
-                            <span className="ml-auto">{item?.cnsl1Price?.toLocaleString()}원</span>
+                            <span className="ml-auto">{item?.cnsl6Price?.toLocaleString()}원</span>
                           </div>
                         </div>
                       </div>
