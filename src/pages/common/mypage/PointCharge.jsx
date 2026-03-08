@@ -3,12 +3,17 @@ import { nanoid } from 'nanoid';
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../store/auth.store';
-import { cancelPayment, createPayment, getMyPoint } from '../../../api/walletApi';
+import {
+  cancelPayment,
+  createPayment,
+  getMyPoint,
+} from '../../../api/walletApi';
+import { authApi } from '../../../axios/Auth';
 
 const PointCharge = () => {
   const { nickname, email } = useAuthStore();
   const clientKey = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
-  const customerKey = nickname;
+  const customerKey = email;
 
   // TODO: DB 연동 시 실제 사용자 포인트 조회
   const [userPoints, setUserPoints] = useState(0);
@@ -145,24 +150,29 @@ const PointCharge = () => {
     if (!paymentKey || !orderId || !amount) return;
 
     const confirmPayment = async () => {
-      const response = await fetch('http://localhost:8080/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentKey, orderId, amount }),
-      });
+      try {
+        const response = await authApi.post('http://localhost:8080/confirm', {
+          paymentKey,
+          orderId,
+          amount,
+        });
 
-      if (!response.ok) {
+        if (response.status !== 200) {
+          alert('결제 승인 실패');
+          return;
+        }
+
+        const updatedPoint = await getMyPoint(email);
+        setUserPoints(updatedPoint);
+
+        setShowCompleteModal(true);
+
+        // URL 정리 (모달 중복 방지)
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (error) {
         alert('결제 승인 실패');
-        return;
+        console.error(error);
       }
-
-      const updatedPoint = await getMyPoint(email);
-      setUserPoints(updatedPoint);
-
-      setShowCompleteModal(true);
-
-      // URL 정리 (모달 중복 방지)
-      window.history.replaceState({}, '', window.location.pathname);
     };
 
     confirmPayment();
@@ -205,8 +215,12 @@ const PointCharge = () => {
           <div className="px-6 lg:px-0 pt-6 lg:pt-0 max-w-[900px] mx-auto flex flex-col items-center">
             {/* 현재 포인트 표시 */}
             <div className="w-full bg-white rounded-2xl lg:rounded-3xl p-4 lg:p-8 mb-6 lg:mb-8 shadow-md lg:shadow-lg text-center">
-              <p className="text-sm lg:text-lg text-gray-600 mb-2 lg:mb-3">현재 내 포인트</p>
-              <p className="text-3xl lg:text-5xl font-bold text-[#2563eb]">{userPoints.toLocaleString()}P</p>
+              <p className="text-sm lg:text-lg text-gray-600 mb-2 lg:mb-3">
+                현재 내 포인트
+              </p>
+              <p className="text-3xl lg:text-5xl font-bold text-[#2563eb]">
+                {userPoints.toLocaleString()}P
+              </p>
             </div>
 
             {/* 포인트 충전 옵션 */}
@@ -236,7 +250,9 @@ const PointCharge = () => {
               onClick={handleChargeClick}
               className="w-full mt-8 lg:mt-10 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white font-bold py-4 lg:py-6 rounded-2xl lg:rounded-3xl shadow-lg lg:shadow-xl text-lg lg:text-2xl lg:hover:shadow-2xl transition-all"
             >
-              {selectedAmount ? `[${selectedAmount.points.toLocaleString()}P]포인트 충전하기` : '[~~~P]포인트 충전하기'}
+              {selectedAmount
+                ? `[${selectedAmount.points.toLocaleString()}P]포인트 충전하기`
+                : '[~~~P]포인트 충전하기'}
             </button>
           </div>
         </div>
@@ -252,8 +268,14 @@ const PointCharge = () => {
             >
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 lg:pb-4 lg:border-b-2 lg:border-gray-200">
                 <div className="flex flex-col items-center lg:flex-row lg:gap-4 mb-6 lg:mb-0">
-                  <img src="/vite.svg" alt="고민손삭" className="w-16 h-16 lg:w-12 lg:h-12 mb-4 lg:mb-0" />
-                  <h3 className="text-xl lg:text-2xl font-bold text-gray-800">포인트 충전하기</h3>
+                  <img
+                    src="/vite.svg"
+                    alt="고민손삭"
+                    className="w-16 h-16 lg:w-12 lg:h-12 mb-4 lg:mb-0"
+                  />
+                  <h3 className="text-xl lg:text-2xl font-bold text-gray-800">
+                    포인트 충전하기
+                  </h3>
                 </div>
 
                 {/* PC 닫기 버튼 */}
@@ -278,7 +300,9 @@ const PointCharge = () => {
                 </div>
                 <div className="flex justify-between text-sm lg:text-base">
                   <span className="text-gray-600">결제 내용</span>
-                  <span className="text-gray-800 font-semibold">포인트 충전</span>
+                  <span className="text-gray-800 font-semibold">
+                    포인트 충전
+                  </span>
                 </div>
               </div>
 
@@ -305,9 +329,15 @@ const PointCharge = () => {
           <div className="fixed inset-0 bg-black/40 lg:bg-black/50 z-50 flex items-center justify-center p-4 lg:p-8">
             <div className="w-[300px] lg:max-w-[500px] lg:w-full bg-white rounded-2xl lg:rounded-3xl p-6 lg:p-10 text-center">
               <div className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-4 lg:mb-6">
-                <img src="/vite.svg" alt="고민손삭" className="w-full h-full object-contain" />
+                <img
+                  src="/vite.svg"
+                  alt="고민손삭"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <h3 className="text-lg lg:text-2xl font-bold text-gray-800 mb-4 lg:mb-6">포인트 충전 완료</h3>
+              <h3 className="text-lg lg:text-2xl font-bold text-gray-800 mb-4 lg:mb-6">
+                포인트 충전 완료
+              </h3>
               <button
                 onClick={handleCompleteClose}
                 className="w-full bg-[#2563eb] text-white font-semibold lg:font-bold py-3 lg:py-4 rounded-xl lg:text-lg lg:hover:bg-[#1d4ed8] transition-colors"

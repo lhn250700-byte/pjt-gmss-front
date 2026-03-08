@@ -4,6 +4,7 @@ import SignIn from './SignIn.jsx';
 import SignUp from './SignUp.jsx';
 import KakaoAdditionalInfo from './KakaoAdditionalInfo.jsx';
 import MyPage from '../mypage/MyPage.jsx';
+import ProtectedRoute from '../../../components/ProtectedRoute.jsx';
 
 const Member = () => {
   return (

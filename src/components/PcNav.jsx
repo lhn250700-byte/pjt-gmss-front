@@ -7,18 +7,26 @@ const PcNav = () => {
   let MENUS = [];
   // const { user } = useAuth();
   const location = useLocation();
-  const { loginStatus, roleName } = useAuthStore();
+  const { loginStatus, roleName, nickname } = useAuthStore();
 
   // 로고 이미지
-  const PcLogo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
 
   if (roleName === 'USER' || !roleName) {
+    if (nickname?.split('_')[0] === 'social') {
+      MENUS.push([]);
+      return null;
+    }
     MENUS.push(
       { label: 'Home', to: '/' },
       { label: '상담', to: '/chat' },
       { label: '게시판', to: '/board' },
       { label: 'INFO', to: '/info' },
-      { label: loginStatus ? '마이페이지' : '로그인', to: loginStatus ? '/mypage' : '/member/signin' },
+      {
+        label: loginStatus ? '마이페이지' : '로그인',
+        to: loginStatus ? '/mypage' : '/member/signin',
+      },
     );
   } else if (roleName === 'SYSTEM') {
     if (location.pathname === '/system/mypage') return null;
@@ -33,7 +41,13 @@ const PcNav = () => {
         <div className="flex items-center justify-between h-24">
           {/* 로고 영역 */}
           <NavLink
-            to={roleName === 'SYSTEM' ? '/system/mypage' : roleName === 'ADMIN' ? '/alarm' : '/'}
+            to={
+              roleName === 'SYSTEM'
+                ? '/system/mypage'
+                : roleName === 'ADMIN'
+                  ? '/alarm'
+                  : '/'
+            }
             className="flex items-center gap-2.5"
           >
             <div className="flex items-center gap-1.5 w-24">
@@ -46,7 +60,8 @@ const PcNav = () => {
           {/* 메뉴 */}
           <ul className="flex gap-8 items-center">
             {MENUS.map(({ label, to }) => {
-              const isMyPage = label.includes('마이페이지') || label === '로그인';
+              const isMyPage =
+                label.includes('마이페이지') || label === '로그인';
 
               return (
                 <li key={to}>

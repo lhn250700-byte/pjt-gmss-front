@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import KakaoAdditionalRedirect from './components/KakaoAdditionalRedirect';
 import Home from './pages/common/home/Home';
 import Chat from './pages/user/chat/Chat';
@@ -49,7 +49,7 @@ const App = () => {
 
   return (
     <>
-      <KakaoAdditionalRedirect />
+      {/* <KakaoAdditionalRedirect /> */}
       <Routes>
         {/* COMMON */}
         {/* HOME */}

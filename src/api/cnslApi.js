@@ -48,15 +48,19 @@ export const patchReservation = async ({
   cnsl_date,
   cnsl_start_time,
 }) => {
-  const { data: cnslId } = await axios.patch(`${BASE_URL}/api/reserve/${cnsl_id}`, null, {
-    params: {
-      cnsler_id,
-      cnsl_title,
-      cnsl_content,
-      cnsl_date,
-      cnsl_start_time,
+  const { data: cnslId } = await axios.patch(
+    `${BASE_URL}/api/reserve/${cnsl_id}`,
+    null,
+    {
+      params: {
+        cnsler_id,
+        cnsl_title,
+        cnsl_content,
+        cnsl_date,
+        cnsl_start_time,
+      },
     },
-  });
+  );
 
   return cnslId;
 };
@@ -90,5 +94,14 @@ export const getCounselorList = async (params) => {
 // 상담사 뷰
 export const getCounselor = async (memberId) => {
   const { data } = await authApi.get(`/api/counselor/${memberId}`);
+  return data;
+};
+
+// 특정 상담사 리뷰 목록
+export const getReviews = async ({ params, memberId }) => {
+  const { data } = await authApi.get(`/api/reviews/counselor/${memberId}`, {
+    params: params,
+  });
+
   return data;
 };

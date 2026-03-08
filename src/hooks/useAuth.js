@@ -33,8 +33,12 @@ export default function useAuth() {
           // Supabase 세션이 있으면 우선 사용
           const provider = session.user.app_metadata?.provider;
           const userRole = session.user.user_metadata?.role || 'USER';
-          const kakaoAdditionalDone = !!session.user.user_metadata?.kakao_additional_done;
-          const nickname = session.user.user_metadata?.nickname || session.user.email?.split('@')[0] || 'user';
+          const kakaoAdditionalDone =
+            !!session.user.user_metadata?.kakao_additional_done;
+          const nickname =
+            session.user.user_metadata?.nickname ||
+            session.user.email?.split('@')[0] ||
+            'user';
           setUser({
             isLogin: true,
             role: userRole,
@@ -125,8 +129,12 @@ export default function useAuth() {
         // Supabase 로그인 시
         const provider = session.user.app_metadata?.provider;
         const userRole = session.user.user_metadata?.role || 'USER';
-        const kakaoAdditionalDone = !!session.user.user_metadata?.kakao_additional_done;
-        const nickname = session.user.user_metadata?.nickname || session.user.email?.split('@')[0] || 'user';
+        const kakaoAdditionalDone =
+          !!session.user.user_metadata?.kakao_additional_done;
+        const nickname =
+          session.user.user_metadata?.nickname ||
+          session.user.email?.split('@')[0] ||
+          'user';
         setUser({
           isLogin: true,
           role: userRole,
@@ -204,39 +212,6 @@ export default function useAuth() {
     }
   };
 
-  // 더미 로그인 함수 (개발/테스트용)
-  const dummySignIn = (role = 'USER') => {
-    const dummyUsers = {
-      USER: {
-        isLogin: true,
-        role: 'USER',
-        email: 'user@test.com',
-        id: 'user-123',
-        nickname: '일반사용자',
-      },
-      COUNSELOR: {
-        isLogin: true,
-        role: 'COUNSELOR',
-        email: 'counselor@test.com',
-        id: 'counselor-123',
-        nickname: '상담사',
-      },
-      ADMIN: {
-        isLogin: true,
-        role: 'ADMIN',
-        email: 'admin@test.com',
-        id: 'admin-123',
-        nickname: '관리자',
-      },
-    };
-
-    const selectedUser = dummyUsers[role] || dummyUsers.USER;
-    setUser(selectedUser);
-    // localStorage에 저장하여 새로고침 시에도 유지
-    localStorage.setItem('dummyUser', JSON.stringify(selectedUser));
-    return { success: true };
-  };
-
   // 회원가입 함수
   const signUp = async ({
     email,
@@ -271,6 +246,21 @@ export default function useAuth() {
     }
   };
 
+  // 카카오 회원가입
+  const kakaoSignUp = async (formData) => {
+    try {
+      const { data } = await authApi.patch(
+        '/api/member/kakao-signup',
+        formData,
+      );
+
+      console.log('회원가입 완료', data);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // 닉네임 중복 확인 함수
   const getmemberInfoNicknameCheckYn = async (nickname) => {
     try {
@@ -285,5 +275,12 @@ export default function useAuth() {
       console.error('닉네임 중복 확인 실패', error);
     }
   };
-  return { user, loading, signIn, signUp, getmemberInfoNicknameCheckYn };
+  return {
+    user,
+    loading,
+    signIn,
+    signUp,
+    getmemberInfoNicknameCheckYn,
+    kakaoSignUp,
+  };
 }

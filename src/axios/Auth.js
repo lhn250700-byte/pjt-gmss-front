@@ -18,7 +18,14 @@ authApi.interceptors.request.use((config) => {
 });
 
 export const refreshAccessToken = async () => {
-  const { setAccessToken, setLoginStatus, setEmail, clearAuth, setNickname, setRoleName } = useAuthStore.getState();
+  const {
+    setAccessToken,
+    setLoginStatus,
+    setEmail,
+    clearAuth,
+    setNickname,
+    setRoleName,
+  } = useAuthStore.getState();
 
   try {
     const accessToken = useAuthStore.getState().accessToken;

@@ -40,7 +40,11 @@ const Alarm = () => {
         if (cancelled) return;
         const content = res.content || [];
         setNotices(content);
-        setTotalPages((res.totalPages ?? Math.ceil((res.totalElements || 0) / NOTICES_PAGE_SIZE)) || 1);
+        setTotalPages(
+          (res.totalPages ??
+            Math.ceil((res.totalElements || 0) / NOTICES_PAGE_SIZE)) ||
+            1,
+        );
       })
       .catch(() => {
         if (!cancelled) setNotices([]);
@@ -76,13 +80,19 @@ const Alarm = () => {
               return `${Y}-${M}-${D} / ${h}:${m}`;
             })(),
             type: r.bbsDiv || '상담',
-            counselor: r.memberId ? `${String(r.memberId).slice(0, 2)}***` : '-',
+            counselor: r.memberId
+              ? `${String(r.memberId).slice(0, 2)}***`
+              : '-',
             counselorName: '-',
             keyword: r.detectedKeywords || '-',
             riskLevel: '높음',
             status: r.action || '진행 중',
             statusColor:
-              r.action === '완료' ? 'text-cyan-400' : r.action === '조치' ? 'text-yellow-600' : 'text-yellow-500',
+              r.action === '완료'
+                ? 'text-cyan-400'
+                : r.action === '조치'
+                  ? 'text-yellow-600'
+                  : 'text-yellow-500',
             bbsId: r.bbsId,
           })),
         );
@@ -118,7 +128,12 @@ const Alarm = () => {
                 to="/alarm"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg bg-white/10 transition-colors text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -134,7 +149,12 @@ const Alarm = () => {
                 to="/dashboard"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -150,7 +170,12 @@ const Alarm = () => {
                 to="/stats"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -166,7 +191,12 @@ const Alarm = () => {
                 to="/admin"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -188,7 +218,9 @@ const Alarm = () => {
           <header className="bg-white px-10 py-5 flex items-center justify-end gap-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-              <span className="text-lg font-semibold text-gray-700">{nickname || ''} 관리자님</span>
+              <span className="text-lg font-semibold text-gray-700">
+                {nickname || ''} 관리자님
+              </span>
             </div>
             <button
               onClick={handleLogout}
@@ -203,11 +235,16 @@ const Alarm = () => {
             <div className="max-w-[1520px] mx-auto">
               {/* TITLE & SUBTITLE */}
               <div className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-800 mb-2">최신 정보</h1>
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                  최신 정보
+                </h1>
                 <div className="flex items-center justify-between">
-                  <p className="text-lg text-gray-600">공지 사항</p>
-                  <Link to="/alarm/notice/write" className="text-[#2563eb] font-semibold hover:underline">
-                    공지 사항 추가 하기 →
+                  <p className="text-lg text-gray-600">공지사항</p>
+                  <Link
+                    to="/alarm/notice/write"
+                    className="text-[#2563eb] font-semibold hover:underline"
+                  >
+                    공지사항 추가 하기 →
                   </Link>
                 </div>
               </div>
@@ -215,7 +252,9 @@ const Alarm = () => {
               {/* 공지 버튼 리스트 - 게시판(NOTI) 연동 */}
               <div className="mb-12">
                 {noticesLoading ? (
-                  <div className="py-12 text-center text-gray-500">공지사항을 불러오는 중...</div>
+                  <div className="py-12 text-center text-gray-500">
+                    공지사항을 불러오는 중...
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {notices.length === 0 ? (
@@ -246,15 +285,30 @@ const Alarm = () => {
               {!noticesLoading && totalPages > 1 && (
                 <div className="flex items-center justify-center gap-3 mb-12">
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
                     className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-white rounded-lg transition-colors"
                     disabled={currentPage === 1}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                   </button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
+                  {Array.from(
+                    { length: Math.min(5, totalPages) },
+                    (_, i) => i + 1,
+                  ).map((page) => (
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
@@ -268,12 +322,24 @@ const Alarm = () => {
                     </button>
                   ))}
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
                     className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-white rounded-lg transition-colors"
                     disabled={currentPage === totalPages}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -282,8 +348,13 @@ const Alarm = () => {
               {/* 최근 위험 단어 감지 */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">최근 위험 단어 감지</h2>
-                  <Link to="/admin/activities" className="text-[#2563eb] font-semibold hover:underline">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    최근 위험 단어 감지
+                  </h2>
+                  <Link
+                    to="/admin/activities"
+                    className="text-[#2563eb] font-semibold hover:underline"
+                  >
                     더보기 →
                   </Link>
                 </div>
@@ -291,24 +362,43 @@ const Alarm = () => {
                 {/* TABLE */}
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                   {riskAlertsLoading ? (
-                    <div className="py-12 text-center text-gray-500">위험 단어 감지 목록을 불러오는 중...</div>
+                    <div className="py-12 text-center text-gray-500">
+                      위험 단어 감지 목록을 불러오는 중...
+                    </div>
                   ) : (
                     <table className="w-full">
                       <thead>
                         <tr className="bg-[#2563eb] text-white">
-                          <th className="px-6 py-4 text-center font-bold text-base">날짜</th>
-                          <th className="px-6 py-4 text-center font-bold text-base">상담</th>
-                          <th className="px-6 py-4 text-center font-bold text-base">상담자</th>
-                          <th className="px-6 py-4 text-center font-bold text-base">상담사</th>
-                          <th className="px-6 py-4 text-center font-bold text-base">감지단어</th>
-                          <th className="px-6 py-4 text-center font-bold text-base">위험단계</th>
-                          <th className="px-6 py-4 text-center font-bold text-base">확인 및 조치</th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            날짜
+                          </th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            상담
+                          </th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            상담자
+                          </th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            상담사
+                          </th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            감지단어
+                          </th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            위험단계
+                          </th>
+                          <th className="px-6 py-4 text-center font-bold text-base">
+                            확인 및 조치
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {riskAlerts.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
+                            <td
+                              colSpan={7}
+                              className="px-6 py-10 text-center text-gray-500"
+                            >
                               최근 24시간 내 감지된 위험 단어가 없습니다.
                             </td>
                           </tr>
@@ -320,17 +410,27 @@ const Alarm = () => {
                                 index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                               }`}
                             >
-                              <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.date}</td>
-                              <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.type}</td>
-                              <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.counselor}</td>
-                              <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.counselorName}</td>
+                              <td className="px-6 py-4 text-center text-sm text-gray-700">
+                                {activity.date}
+                              </td>
+                              <td className="px-6 py-4 text-center text-sm text-gray-700">
+                                {activity.type}
+                              </td>
+                              <td className="px-6 py-4 text-center text-sm text-gray-700">
+                                {activity.counselor}
+                              </td>
+                              <td className="px-6 py-4 text-center text-sm text-gray-700">
+                                {activity.counselorName}
+                              </td>
                               <td className="px-6 py-4 text-center text-sm font-semibold text-red-600">
                                 {activity.keyword}
                               </td>
                               <td className="px-6 py-4 text-center text-sm font-semibold text-red-600">
                                 {activity.riskLevel}
                               </td>
-                              <td className={`px-6 py-4 text-center text-sm font-semibold ${activity.statusColor}`}>
+                              <td
+                                className={`px-6 py-4 text-center text-sm font-semibold ${activity.statusColor}`}
+                              >
                                 {activity.status}
                               </td>
                             </tr>

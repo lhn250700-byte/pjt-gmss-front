@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/auth.store';
 const Nav = () => {
   let MENUS = [];
   const location = useLocation();
-  const { loginStatus, roleName } = useAuthStore();
+  const { loginStatus, roleName, nickname } = useAuthStore();
 
   if (location.pathname.startsWith('/member')) return null;
 
@@ -26,12 +26,19 @@ const Nav = () => {
   }
 
   if (roleName === 'USER' || !roleName) {
+    if (nickname?.split('_')[0] === 'social') {
+      MENUS.push([]);
+      return null;
+    }
     MENUS.push(
       { label: '홈', to: '/' },
       { label: '상담', to: '/chat' },
       { label: '게시판', to: '/board' },
       { label: 'INFO', to: '/info' },
-      { label: loginStatus ? '마이페이지' : '로그인', to: loginStatus ? '/mypage' : '/member/signin' },
+      {
+        label: loginStatus ? '마이페이지' : '로그인',
+        to: loginStatus ? '/mypage' : '/member/signin',
+      },
     );
   } else if (roleName === 'ADMIN') {
     MENUS.push(
