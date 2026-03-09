@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { authApi } from '../axios/Auth';
 import { useAuthStore } from '../store/auth.store';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from './../lib/supabase';
 
 export default function useAuth() {
   // 초기 상태: 로그아웃 상태
@@ -33,12 +33,8 @@ export default function useAuth() {
           // Supabase 세션이 있으면 우선 사용
           const provider = session.user.app_metadata?.provider;
           const userRole = session.user.user_metadata?.role || 'USER';
-          const kakaoAdditionalDone =
-            !!session.user.user_metadata?.kakao_additional_done;
-          const nickname =
-            session.user.user_metadata?.nickname ||
-            session.user.email?.split('@')[0] ||
-            'user';
+          const kakaoAdditionalDone = !!session.user.user_metadata?.kakao_additional_done;
+          const nickname = session.user.user_metadata?.nickname || session.user.email?.split('@')[0] || 'user';
           setUser({
             isLogin: true,
             role: userRole,
@@ -129,12 +125,8 @@ export default function useAuth() {
         // Supabase 로그인 시
         const provider = session.user.app_metadata?.provider;
         const userRole = session.user.user_metadata?.role || 'USER';
-        const kakaoAdditionalDone =
-          !!session.user.user_metadata?.kakao_additional_done;
-        const nickname =
-          session.user.user_metadata?.nickname ||
-          session.user.email?.split('@')[0] ||
-          'user';
+        const kakaoAdditionalDone = !!session.user.user_metadata?.kakao_additional_done;
+        const nickname = session.user.user_metadata?.nickname || session.user.email?.split('@')[0] || 'user';
         setUser({
           isLogin: true,
           role: userRole,
@@ -249,10 +241,7 @@ export default function useAuth() {
   // 카카오 회원가입
   const kakaoSignUp = async (formData) => {
     try {
-      const { data } = await authApi.patch(
-        '/api/member/kakao-signup',
-        formData,
-      );
+      const { data } = await authApi.patch('/api/member/kakao-signup', formData);
 
       console.log('회원가입 완료', data);
       return data;
@@ -275,6 +264,53 @@ export default function useAuth() {
       console.error('닉네임 중복 확인 실패', error);
     }
   };
+
+  const uploadProfileImage = async (file) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+
+    const filePath = `profile/${fileName}`;
+
+    const { error } = await supabase.storage.from('profile-images').upload(filePath, file, {
+      upsert: false,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+
+    return {
+      img_name: fileName,
+      img_url: data.publicUrl,
+    };
+  };
+
+  const saveProfileImage = async (memberId, imgName, imgUrl) => {
+    const { error } = await supabase
+      .from('member')
+      .update({
+        img_name: imgName,
+        img_url: imgUrl,
+      })
+      .eq('member_id', memberId);
+
+    if (error) {
+      throw error;
+    }
+  };
+
+  const editInfo = async (formData) => {
+    const { data } = await authApi.patch('/api/mypage/modify', formData);
+    return data;
+  };
+
+  const getCounselorInfo = async () => {
+    const { data } = await authApi.get('/api/counselor/mypage');
+    return data;
+  };
+
   return {
     user,
     loading,
@@ -282,5 +318,9 @@ export default function useAuth() {
     signUp,
     getmemberInfoNicknameCheckYn,
     kakaoSignUp,
+    uploadProfileImage,
+    saveProfileImage,
+    editInfo,
+    getCounselorInfo,
   };
 }

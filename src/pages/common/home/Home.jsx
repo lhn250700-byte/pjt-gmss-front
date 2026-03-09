@@ -15,12 +15,9 @@ import {
 import { useAuthStore } from '../../../store/auth.store';
 import { bbsApi } from './../../../api/backendApi';
 
-const mobileLogo =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png';
-const nomal_cnsl =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png';
-const career_cnsl =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/career_cnsl.png';
+const mobileLogo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png';
+const nomal_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png';
+const career_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/career_cnsl.png';
 const employment_cnsl =
   'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/employment_cnsl.png';
 
@@ -36,10 +33,8 @@ const Home = () => {
     const fetchPopularPosts = async () => {
       try {
         let data;
-        if (communityMode === 'realtime')
-          data = await getRealtimePopularPosts(communityMode);
-        else if (communityMode === 'week')
-          data = await getWeeklyPopularPosts(communityMode);
+        if (communityMode === 'realtime') data = await getRealtimePopularPosts(communityMode);
+        else if (communityMode === 'week') data = await getWeeklyPopularPosts(communityMode);
         else if (communityMode === 'month') {
           if (accessToken) {
             // 로그인 했으면 tf-idf 스코어 +
@@ -52,27 +47,18 @@ const Home = () => {
         } else {
           if (accessToken) {
             data = await getRecommendedPosts(email);
-
-            console.log(data);
+            data = data.recommendations;
           }
-
-          return;
         }
         console.log('test', data);
         setCommunityTopPosts(data);
       } catch (error) {
         setCommunityTopPosts([]);
         if (error.response) {
-          setErrorMessage(
-            error.response.data?.detail || '서버 오류가 발생했습니다.',
-          );
+          setErrorMessage(error.response.data?.detail || '서버 오류가 발생했습니다.');
         } else if (error.request) {
           setErrorMessage('서버 응답이 없습니다. 네트워크를 확인해 주세요.');
-        } else
-          setErrorMessage(
-            error.message ||
-              '알 수 없는 에러가 발생했습니다. 새로고침을 해 주세요.',
-          );
+        } else setErrorMessage(error.message || '알 수 없는 에러가 발생했습니다. 새로고침을 해 주세요.');
       }
     };
 
@@ -103,10 +89,8 @@ const Home = () => {
           content.map((row) => ({
             id: row.bbsId,
             title: row.title ?? '',
-            author:
-              row.memberId?.nickname ?? row.memberId?.memberId ?? '관리자',
-            createdAt:
-              row.created_at ?? row.createdAt ?? new Date().toISOString(),
+            author: row.memberId?.nickname ?? row.memberId?.memberId ?? '관리자',
+            createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
           })),
         );
       })
@@ -189,11 +173,7 @@ const Home = () => {
                 ★
               </span>
               <span>고민순삭</span> */}
-              <img
-                src={mobileLogo}
-                alt="로고"
-                style={{ width: '60px', height: 'auto' }}
-              />
+              <img src={mobileLogo} alt="로고" style={{ width: '60px', height: 'auto' }} />
             </div>
           </header>
 
@@ -206,15 +186,9 @@ const Home = () => {
               }}
             >
               <div>
-                <p className="text-sm leading-[1.4] font-semibold">
-                  우리를 망치는 것은 다른 사람들의 눈을
-                </p>
-                <p className="text-sm leading-[1.4] font-semibold">
-                  지나치게 의식하는 것이다.
-                </p>
-                <span className="block mt-2 text-[11px] font-normal opacity-90">
-                  벤자민 프랭클린 | 명언/명대사
-                </span>
+                <p className="text-sm leading-[1.4] font-semibold">우리를 망치는 것은 다른 사람들의 눈을</p>
+                <p className="text-sm leading-[1.4] font-semibold">지나치게 의식하는 것이다.</p>
+                <span className="block mt-2 text-[11px] font-normal opacity-90">벤자민 프랭클린 | 명언/명대사</span>
               </div>
             </section>
 
@@ -230,12 +204,8 @@ const Home = () => {
                 </div>
                 <div>
                   <h3 className="text-[20px] font-bold mb-1.5">고민 상담</h3>
-                  <p className="text-[13px] font-medium">
-                    혼자서 풀지 못하던 고민,
-                  </p>
-                  <p className="text-[13px] font-medium">
-                    지금 마음부터 가볍게 정리해보세요.
-                  </p>
+                  <p className="text-[13px] font-medium">혼자서 풀지 못하던 고민,</p>
+                  <p className="text-[13px] font-medium">지금 마음부터 가볍게 정리해보세요.</p>
                 </div>
               </Link>
 
@@ -249,12 +219,8 @@ const Home = () => {
                 </div>
                 <div>
                   <h3 className="text-[20px] font-bold mb-1.5">커리어 상담</h3>
-                  <p className="text-[13px] font-medium">
-                    지금의 선택이 맞는지,
-                  </p>
-                  <p className="text-[13px] font-medium">
-                    커리어 방향을 함께 점검해드려요.
-                  </p>
+                  <p className="text-[13px] font-medium">지금의 선택이 맞는지,</p>
+                  <p className="text-[13px] font-medium">커리어 방향을 함께 점검해드려요.</p>
                 </div>
               </Link>
 
@@ -268,12 +234,8 @@ const Home = () => {
                 </div>
                 <div>
                   <h3 className="text-[20px] font-bold mb-1.5">취업 상담</h3>
-                  <p className="text-[13px] font-medium">
-                    이력서부터 면접까지,
-                  </p>
-                  <p className="text-[13px] font-medium">
-                    합격에 필요한 전략을 전해드립니다.
-                  </p>
+                  <p className="text-[13px] font-medium">이력서부터 면접까지,</p>
+                  <p className="text-[13px] font-medium">합격에 필요한 전략을 전해드립니다.</p>
                 </div>
               </Link>
             </section>
@@ -333,26 +295,16 @@ const Home = () => {
               {communityTopPosts?.length > 0 ? (
                 <ol className="list-none p-0 m-0 flex flex-col gap-2">
                   {communityTopPosts.map((p, index) => (
-                    <li
-                      key={p.bbsId || p.bbs_id}
-                      className="flex items-center gap-2.5 text-[13px] text-[#1f2937]"
-                    >
-                      <span className="font-bold text-[#4b5563] w-[26px]">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <Link
-                        to={`/board/view/${p.bbsId || p.bbs_id}`}
-                        className="truncate"
-                      >
+                    <li key={p.bbsId || p.bbs_id} className="flex items-center gap-2.5 text-[13px] text-[#1f2937]">
+                      <span className="font-bold text-[#4b5563] w-[26px]">{String(index + 1).padStart(2, '0')}</span>
+                      <Link to={`/board/view/${p.bbsId || p.bbs_id}`} className="truncate">
                         {p.title}
                       </Link>
                     </li>
                   ))}
                 </ol>
               ) : (
-                <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">
-                  {errorMessage}
-                </div>
+                <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">{errorMessage}</div>
               )}
             </section>
           </main>
@@ -371,20 +323,15 @@ const Home = () => {
             >
               <div>
                 <p className="!text-5xl leading-[1.5] !font-semibold mb-5">
-                  우리를 망치는 것은 다른 사람들의 눈을 지나치게 의식하는
-                  것이다.
+                  우리를 망치는 것은 다른 사람들의 눈을 지나치게 의식하는 것이다.
                 </p>
-                <span className="block text-[13px] font-normal opacity-90">
-                  벤자민 프랭클린 | 명언/명대사
-                </span>
+                <span className="block text-[13px] font-normal opacity-90">벤자민 프랭클린 | 명언/명대사</span>
               </div>
             </section>
 
             {/* QUICK TEST */}
             <section className="my-10">
-              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">
-                내 취업 간단 테스트
-              </h3>
+              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">내 취업 간단 테스트</h3>
               <div className="grid grid-cols-3 gap-4">
                 {[
                   {
@@ -409,12 +356,8 @@ const Home = () => {
                         테스트
                       </span>
                     </div>
-                    <p className="!text-2xl !font-medium text-[#111827] mb-2">
-                      {t.title}
-                    </p>
-                    <p className="!text-xl text-[#6b7280] leading-relaxed">
-                      {t.desc}
-                    </p>
+                    <p className="!text-2xl !font-medium text-[#111827] mb-2">{t.title}</p>
+                    <p className="!text-xl text-[#6b7280] leading-relaxed">{t.desc}</p>
                   </div>
                 ))}
               </div>
@@ -423,20 +366,12 @@ const Home = () => {
             {/* MAIN CTA */}
             {/* TODO: DB 연동 시 각 버튼의 링크를 실제 상담 서비스로 연결 */}
             <section className="my-10">
-              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">
-                지금 나에게 필요한 상담은 무엇인가요?
-              </h3>
+              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">지금 나에게 필요한 상담은 무엇인가요?</h3>
               <div className="grid grid-cols-3 gap-5">
                 {/* 고민 상담 → AI 상담 */}
                 <button
                   type="button"
-                  onClick={() =>
-                    navigate(
-                      activeCnslId
-                        ? `/chat/withai/${activeCnslId}`
-                        : '/chat/withai',
-                    )
-                  }
+                  onClick={() => navigate(activeCnslId ? `/chat/withai/${activeCnslId}` : '/chat/withai')}
                   className="bg-gradient-to-br from-[#2ed3c6] to-[#26b8ad] rounded-[20px] p-8 text-white shadow-[0_8px_24px_rgba(46,211,198,0.25)] hover:shadow-[0_12px_32px_rgba(46,211,198,0.35)] hover:scale-[1.02] transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[200px] border-0 cursor-pointer"
                 >
                   <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center text-[52px] mb-4">
@@ -486,21 +421,14 @@ const Home = () => {
 
             {/* KEYWORDS */}
             <section className="mb-8">
-              <h3 className="!text-4xl !font-bold text-[#111827] mb-4">
-                이번 주 키워드
-              </h3>
+              <h3 className="!text-4xl !font-bold text-[#111827] mb-4">이번 주 키워드</h3>
               <div className="grid grid-cols-2 gap-5">
                 <div className="relative bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] overflow-hidden p-6 h-full min-h-[320px] flex items-center justify-center">
-                  <img
-                    src="http://localhost:8000/weekly-wordcloud"
-                    className=""
-                  />
+                  <img src="http://localhost:8000/weekly-wordcloud" className="" />
                 </div>
                 <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <p className="!text-3xl !font-semibold text-[#111827]">
-                      상위 키워드 TOP 10
-                    </p>
+                    <p className="!text-3xl !font-semibold text-[#111827]">상위 키워드 TOP 10</p>
                     <p className="!text-base text-[#6b7280]">이번 주</p>
                   </div>
                   <ol className="space-y-2.5">
@@ -510,16 +438,11 @@ const Home = () => {
                       .concat(['포트폴리오'])
                       .slice(0, 10)
                       .map((t, idx) => (
-                        <li
-                          key={`${t}-${idx}`}
-                          className="flex items-center gap-3 !text-[18px]"
-                        >
+                        <li key={`${t}-${idx}`} className="flex items-center gap-3 !text-[18px]">
                           <span className="w-7 text-right font-bold text-[#4b5563]">
                             {String(idx + 1).padStart(2, '0')}
                           </span>
-                          <span className="flex-1 text-[#111827] !font-medium">
-                            {t}
-                          </span>
+                          <span className="flex-1 text-[#111827] !font-medium">{t}</span>
                         </li>
                       ))}
                   </ol>
@@ -532,9 +455,7 @@ const Home = () => {
               {/* 공지사항 */}
               <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-[18px] font-bold text-[#111827]">
-                    공지사항
-                  </h4>
+                  <h4 className="text-[18px] font-bold text-[#111827]">공지사항</h4>
                   <Link
                     to="/board"
                     state={{ activeTab: '공지사항' }}
@@ -544,13 +465,9 @@ const Home = () => {
                   </Link>
                 </div>
                 {loadingNotices ? (
-                  <p className="text-[13px] text-[#6b7280] py-6">
-                    공지사항을 불러오는 중...
-                  </p>
+                  <p className="text-[13px] text-[#6b7280] py-6">공지사항을 불러오는 중...</p>
                 ) : notices.length === 0 ? (
-                  <p className="text-[13px] text-[#6b7280] py-6">
-                    등록된 공지사항이 없습니다.
-                  </p>
+                  <p className="text-[13px] text-[#6b7280] py-6">등록된 공지사항이 없습니다.</p>
                 ) : (
                   <div className="space-y-3">
                     {notices.map((notice) => (
@@ -567,14 +484,9 @@ const Home = () => {
                           />
                         </div>
                         <div className="p-3">
-                          <p className="text-[13px] font-bold text-[#111827] line-clamp-1 mb-1">
-                            {notice.title}
-                          </p>
+                          <p className="text-[13px] font-bold text-[#111827] line-clamp-1 mb-1">{notice.title}</p>
                           <p className="text-[11px] text-[#6b7280]">
-                            {notice.author} |{' '}
-                            {new Date(notice.createdAt).toLocaleDateString(
-                              'ko-KR',
-                            )}
+                            {notice.author} | {new Date(notice.createdAt).toLocaleDateString('ko-KR')}
                           </p>
                         </div>
                       </Link>
@@ -586,9 +498,7 @@ const Home = () => {
               {/* 커뮤니티 인기글 */}
               <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-[18px] font-bold text-[#111827]">
-                    커뮤니티 인기글
-                  </h4>
+                  <h4 className="text-[18px] font-bold text-[#111827]">커뮤니티 인기글</h4>
                   <Link
                     to="/board"
                     state={{ activeTab: '인기글' }}
@@ -629,30 +539,25 @@ const Home = () => {
                 </div>
                 {communityTopPosts?.length > 0 ? (
                   <ol className="list-none p-0 m-0 flex flex-col gap-2.5">
-                    {communityTopPosts.map((p, index) => (
-                      <li
-                        key={p.bbsId || p.bbs_id}
-                        className="flex items-center gap-3 text-[13px] text-[#1f2937]"
-                      >
-                        <span className="font-bold text-[#4b5563] w-[28px] text-center">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <Link
-                          to={`/board/view/${p.bbsId || p.bbs_id}`}
-                          className="flex-1 truncate hover:text-[#2f80ed] font-medium transition-colors"
-                        >
-                          {p.title}
-                        </Link>
-                        <span className="text-[11px] text-[#6b7280]">
-                          👍 {p.bbsLikeCount}
-                        </span>
-                      </li>
-                    ))}
+                    {communityTopPosts.map((p, index) => {
+                      return (
+                        <li key={p.bbsId || p.bbs_id} className="flex items-center gap-3 text-[13px] text-[#1f2937]">
+                          <span className="font-bold text-[#4b5563] w-[28px] text-center">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <Link
+                            to={`/board/view/${p.bbsId || p.bbs_id}`}
+                            className="flex-1 truncate hover:text-[#2f80ed] font-medium transition-colors"
+                          >
+                            {p.title}
+                          </Link>
+                          <span className="text-[11px] text-[#6b7280]">👍 {p.bbsLikeCount}</span>
+                        </li>
+                      );
+                    })}
                   </ol>
                 ) : (
-                  <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">
-                    {errorMessage}
-                  </div>
+                  <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">{errorMessage}</div>
                 )}
               </div>
             </section>

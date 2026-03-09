@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../../store/auth.store';
+import useAuth from '../../../hooks/useAuth';
 
 // TODO: DB 연동 가이드
 // 이 페이지는 상담사 정보 수정 페이지입니다
@@ -43,30 +45,29 @@ const EditCounselorInfo = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const { uploadProfileImage, saveProfileImage, editInfo, getCounselorInfo } = useAuth();
 
   const [formData, setFormData] = useState({
     newPassword: '',
     confirmPassword: '',
     selectedTags: [],
+    text: '',
   });
+  const { email, accessToken } = useAuthStore();
 
-  // TODO: DB 연동 시 초기 데이터 로드
-  // useEffect(() => {
-  //   const loadCounselorInfo = async () => {
-  //     const response = await fetch('/api/counselors/me', {
-  //       headers: { 'Authorization': `Bearer ${token}` }
-  //     });
-  //     const data = await response.json();
-  //     setFormData({
-  //       ...formData,
-  //       selectedTags: data.tags || []
-  //     });
-  //     setProfileImage(data.profileImage);
-  //   };
-  //   loadCounselorInfo();
-  // }, []);
+  useEffect(() => {
+    const fetchCounselorInfo = async () => {
+      const data = await getCounselorInfo();
+      const hashTags = data?.hashTags?.hashTag ?? [];
+      const text = data?.text ?? '';
+      setFormData({ ...formData, selectedTags: hashTags, text: text });
+      setProfileImage(data?.imgUrl);
+    };
 
-  const availableTags = ['커리어', '진로', '연애'];
+    fetchCounselorInfo();
+  }, [accessToken]);
+
+  const availableTags = ['커리어', '진로', '고민'];
 
   const handleTagSelect = (e) => {
     const value = e.target.value;
@@ -85,15 +86,19 @@ const EditCounselorInfo = () => {
     });
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+      // const reader = new FileReader();
+      // reader.onloadend = () => {
+      //   setProfileImage(reader.result);
+      // };
+      // reader.readAsDataURL(file);
+
+      const res = await uploadProfileImage(file);
+      await saveProfileImage(email, res.img_name, res.img_url);
+      setProfileImage(res.img_url);
+    } else return;
   };
 
   const handleSubmit = async () => {
@@ -103,12 +108,12 @@ const EditCounselorInfo = () => {
       return;
     }
 
-    if (formData.newPassword && formData.newPassword.length < 8) {
-      alert('비밀번호는 8자 이상이어야 합니다.');
+    if (formData.newPassword && formData.newPassword?.length < 6) {
+      alert('비밀번호는 6자 이상이어야 합니다.');
       return;
     }
 
-    if (formData.selectedTags.length > 3) {
+    if (formData.selectedTags?.length > 3) {
       alert('상담 태그는 최대 3개까지 선택 가능합니다.');
       return;
     }
@@ -137,8 +142,18 @@ const EditCounselorInfo = () => {
     //   alert('정보 수정에 실패했습니다.');
     // }
 
-    // 저장 로직 (백엔드 연동 시 구현)
-    setShowSuccessModal(true);
+    try {
+      const data = await editInfo({
+        pw: formData.newPassword || null,
+        text: formData.text || null,
+        hashTags: formData.selectedTags || null,
+      });
+
+      // 저장 로직 (백엔드 연동 시 구현)
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleCancel = () => {
@@ -148,7 +163,7 @@ const EditCounselorInfo = () => {
   const handleModalAction = (action) => {
     setShowSuccessModal(false);
     if (action === 'mypage') {
-      navigate('/mypage'); // PC/모바일 모두 동일한 마이페이지 경로
+      navigate('/system/mypage'); // PC/모바일 모두 동일한 마이페이지 경로
     } else {
       navigate('/system/info/profile');
     }
@@ -209,7 +224,7 @@ const EditCounselorInfo = () => {
             <h2 className="text-lg font-bold mb-3">상담 태그 설정</h2>
             <select className="w-full p-3 border border-gray-300 rounded mb-3" onChange={handleTagSelect} value="">
               <option value="">원하는 상담 태그를 선택해주세요 (최대 3개)</option>
-              {availableTags.map((tag) => (
+              {availableTags?.map((tag) => (
                 <option key={tag} value={tag}>
                   {tag}
                 </option>
@@ -217,9 +232,9 @@ const EditCounselorInfo = () => {
             </select>
 
             {/* 선택된 태그 표시 */}
-            {formData.selectedTags.length > 0 && (
+            {formData?.selectedTags?.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
-                {formData.selectedTags.map((tag) => (
+                {formData?.selectedTags?.map((tag) => (
                   <span
                     key={tag}
                     className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm flex items-center gap-2"
@@ -232,6 +247,17 @@ const EditCounselorInfo = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-lg font-bold mb-3">한 줄 소개글</h2>
+            <input
+              type="text"
+              placeholder="간단한 소개 글을 입력해 주세요."
+              className="w-full p-3 mb-3 border border-gray-300 rounded"
+              value={formData.text}
+              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+            />
           </div>
 
           {/* 하단 버튼 */}
@@ -291,7 +317,7 @@ const EditCounselorInfo = () => {
                     value=""
                   >
                     <option value="">원하는 상담 태그를 선택해주세요 (최대 3개)</option>
-                    {availableTags.map((tag) => (
+                    {availableTags?.map((tag) => (
                       <option key={tag} value={tag}>
                         {tag}
                       </option>
@@ -299,9 +325,9 @@ const EditCounselorInfo = () => {
                   </select>
 
                   {/* 선택된 태그 표시 */}
-                  {formData.selectedTags.length > 0 && (
+                  {formData?.selectedTags?.length > 0 && (
                     <div className="flex flex-wrap gap-3">
-                      {formData.selectedTags.map((tag) => (
+                      {formData.selectedTags?.map((tag) => (
                         <span
                           key={tag}
                           className="bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-base font-medium flex items-center gap-3"
@@ -309,7 +335,7 @@ const EditCounselorInfo = () => {
                           {tag}
                           <button
                             onClick={() => handleTagRemove(tag)}
-                            className="text-blue-700 hover:text-blue-900 text-lg"
+                            className="text-blue-700 hover:text-blue-900 text-lg cursor-pointer"
                           >
                             ✕
                           </button>
@@ -317,6 +343,18 @@ const EditCounselorInfo = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* 한 줄 소개글 입력 */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">한 줄 소개글</h3>
+                  <input
+                    type="text"
+                    placeholder="간단한 소개 글을 입력해 주세요."
+                    className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-[#2563eb] focus:outline-none transition"
+                    value={formData.text}
+                    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                  />
                 </div>
 
                 {/* 비밀번호 변경 */}
@@ -349,13 +387,13 @@ const EditCounselorInfo = () => {
             <div className="flex gap-6">
               <button
                 onClick={handleCancel}
-                className="flex-1 border-2 border-[#2563eb] text-[#2563eb] py-4 rounded-xl text-lg font-bold hover:bg-blue-50 transition"
+                className="cursor-pointer flex-1 border-2 border-[#2563eb] text-[#2563eb] py-4 rounded-xl text-lg font-bold hover:bg-blue-50 transition"
               >
                 취소
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white py-4 rounded-xl text-lg font-bold hover:shadow-lg transition"
+                className="cursor-pointer flex-1 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white py-4 rounded-xl text-lg font-bold hover:shadow-lg transition"
               >
                 완료
               </button>
@@ -371,7 +409,7 @@ const EditCounselorInfo = () => {
             <div className="flex flex-col items-center text-center">
               {/* 로고 */}
               <div className="mb-4 lg:mb-6">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-blue-100 rounded-xl lg:rounded-2xl flex items-center justify-center mb-2">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-blue-100 rounded-xl lg:rounded-2xl flex items-center justify-center mb-2 ml-5">
                   <svg
                     className="w-10 h-10 lg:w-12 lg:h-12 text-blue-600"
                     fill="none"
@@ -399,13 +437,13 @@ const EditCounselorInfo = () => {
                     setShowCancelModal(false);
                     navigate(-1);
                   }}
-                  className="flex-1 bg-red-500 text-white py-3 lg:py-4 rounded-xl lg:rounded-2xl font-semibold lg:text-lg hover:bg-red-600 transition"
+                  className="cursor-pointer flex-1 bg-red-500 text-white py-3 lg:py-4 rounded-xl lg:rounded-2xl font-semibold lg:text-lg hover:bg-red-600 transition"
                 >
                   취소하기
                 </button>
                 <button
                   onClick={() => setShowCancelModal(false)}
-                  className="flex-1 bg-[#2563eb] text-white py-3 lg:py-4 rounded-xl lg:rounded-2xl font-semibold lg:text-lg hover:bg-[#1e40af] transition"
+                  className="cursor-pointer flex-1 bg-[#2563eb] text-white py-3 lg:py-4 rounded-xl lg:rounded-2xl font-semibold lg:text-lg hover:bg-[#1e40af] transition"
                 >
                   계속 수정하기
                 </button>

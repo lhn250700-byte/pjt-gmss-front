@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { counselorProfile, counselorReviews } from './counselorProfileData';
+import { useAuthStore } from '../../../store/auth.store';
+import useAuth from '../../../hooks/useAuth';
 
 const CounselorProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { accessToken, nickname } = useAuthStore();
+  const { getCounselorInfo } = useAuth();
+  const [profileImage, setProfileImage] = useState(null);
+  const [hashTags, setHashTags] = useState([]);
+  const [profile, setProfile] = useState('');
+  const [text, setText] = useState('');
 
   // 별점 렌더링
   const renderStars = (rating) => {
@@ -14,6 +22,19 @@ const CounselorProfile = () => {
   const handleReviewClick = (reviewId) => {
     navigate(`/system/info/review/${reviewId}`);
   };
+
+  useEffect(() => {
+    const fetchCounselorInfo = async () => {
+      const data = await getCounselorInfo();
+      setProfileImage(data?.imgUrl);
+      setHashTags(data?.hashTags?.hashTag);
+      setProfile(data?.profile);
+      setText(data?.text);
+      console.log(data);
+    };
+
+    fetchCounselorInfo();
+  }, [accessToken]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,7 +48,7 @@ const CounselorProfile = () => {
         <h1 className="text-lg font-bold">상담사 프로필</h1>
         <button
           onClick={() => navigate('/system/info/about')}
-          className="ml-auto bg-blue-600 text-white px-4 py-2 rounded border-2 border-white font-semibold hover:bg-blue-700 transition"
+          className="cursor-pointer ml-auto bg-blue-600 text-white px-4 py-2 rounded border-2 border-white font-semibold hover:bg-blue-700 transition"
         >
           수정
         </button>
@@ -37,11 +58,11 @@ const CounselorProfile = () => {
       <div className="bg-white">
         {/* 배너 이미지 */}
         <div className="relative">
-          <img src={counselorProfile.profileImage} alt="배너" className="w-full h-48 object-cover" />
+          <img src={null} alt="배너" className="w-full h-48 object-cover" />
           {/* 프로필 사진 */}
           <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
             <img
-              src="https://via.placeholder.com/120"
+              src={profileImage}
               alt="프로필"
               className="w-24 h-24 rounded-full border-4 border-white object-cover"
             />
@@ -50,68 +71,29 @@ const CounselorProfile = () => {
 
         {/* 상담사 정보 */}
         <div className="pt-16 px-4 pb-6 text-center">
-          <h2 className="text-xl font-bold mb-2">{counselorProfile.name}</h2>
-          <p className="text-blue-600 text-sm mb-3">{counselorProfile.title}</p>
+          <h2 className="text-xl font-bold mb-2">{nickname || ''} 상담사님</h2>
+          <p className="text-blue-600 text-sm mb-3">{text}</p>
           <div className="flex justify-center gap-2 flex-wrap">
-            {counselorProfile.tags.map((tag, index) => (
+            {hashTags?.map((tag, index) => (
               <span key={index} className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-                #{tag}
+                # {tag} 상담
               </span>
             ))}
           </div>
         </div>
 
         {/* 심리상담사 소개 */}
-        <div className="px-4 py-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold mb-3">심리상담사 소개</h3>
+        <div className="px-4 py-8 border-t border-gray-200">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            {/* 제목 */}
+            <h3 className="text-xl font-bold text-gray-800 mb-4">심리상담사 소개</h3>
 
-          <h4 className="font-semibold mb-2">{counselorProfile.introduction.title}</h4>
-          <p className="text-gray-700 text-sm leading-relaxed mb-4">{counselorProfile.introduction.content}</p>
+            {/* 구분선 */}
+            <div className="w-12 h-1 bg-blue-500 rounded mb-6"></div>
 
-          <h4 className="font-semibold mb-2">공인 자격 및 경력</h4>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            {counselorProfile.certifications.map((cert, index) => (
-              <li key={index} className="text-gray-700 text-sm">
-                {cert}
-              </li>
-            ))}
-          </ul>
-
-          <h4 className="font-semibold mb-2">기타 경력</h4>
-          <ul className="list-disc list-inside space-y-1">
-            {counselorProfile.otherInfo.map((info, index) => (
-              <li key={index} className="text-gray-700 text-sm">
-                {info}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* 심리상담 세션 소개 */}
-        <div className="px-4 py-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold mb-3">{counselorProfile.detailedIntro.title}</h3>
-
-          <h4 className="font-semibold mb-2">{counselorProfile.detailedIntro.subtitle}</h4>
-          <ul className="list-disc list-inside space-y-2">
-            {counselorProfile.detailedIntro.sections.map((section, index) => (
-              <li key={index} className="text-gray-700 text-sm leading-relaxed">
-                {section.content}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* 상담 진행 방식 */}
-        <div className="px-4 py-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold mb-3">{counselorProfile.expectation.title}</h3>
-
-          <ol className="space-y-4">
-            {counselorProfile.expectation.steps.map((step) => (
-              <li key={step.step} className="text-gray-700 text-sm leading-relaxed">
-                <span className="font-semibold">{step.step}.</span> {step.content}
-              </li>
-            ))}
-          </ol>
+            {/* 프로필 내용 */}
+            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{profile || ''}</p>
+          </div>
         </div>
 
         {/* 상담 리뷰 */}
