@@ -6,7 +6,7 @@ import useAuth from '../../../hooks/useAuth';
 const EditCounselorAbout = () => {
   const navigate = useNavigate();
   const { accessToken } = useAuthStore();
-  const { getCounselorInfo } = useAuth();
+  const { getUserInfo } = useAuth();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -47,7 +47,9 @@ const EditCounselorAbout = () => {
   };
 
   const removeCertification = (index) => {
-    const newCertifications = formData.certifications.filter((_, i) => i !== index);
+    const newCertifications = formData.certifications.filter(
+      (_, i) => i !== index,
+    );
     setFormData({ ...formData, certifications: newCertifications });
   };
 
@@ -71,7 +73,7 @@ const EditCounselorAbout = () => {
 
   useEffect(() => {
     const fetchCounselorInfo = async () => {
-      const data = await getCounselorInfo();
+      const data = await getUserInfo();
       setFormData({ ...formData, profile: data?.profile });
     };
 
@@ -103,7 +105,9 @@ const EditCounselorAbout = () => {
             <select
               className="px-3 py-2 border border-gray-300 rounded text-sm"
               value={formData.fontStyle}
-              onChange={(e) => setFormData({ ...formData, fontStyle: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, fontStyle: e.target.value })
+              }
             >
               <option value="본문">본문</option>
               <option value="제목">제목</option>
@@ -113,7 +117,9 @@ const EditCounselorAbout = () => {
             <select
               className="px-3 py-2 border border-gray-300 rounded text-sm"
               value={formData.fontSize}
-              onChange={(e) => setFormData({ ...formData, fontSize: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, fontSize: e.target.value })
+              }
             >
               <option value="10px">10px</option>
               <option value="12px">12px</option>
@@ -132,8 +138,18 @@ const EditCounselorAbout = () => {
                 formData.textAlign === 'left' ? 'bg-blue-100' : 'bg-gray-100'
               } hover:bg-blue-50 transition`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h16" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h10M4 18h16"
+                />
               </svg>
             </button>
             <button
@@ -142,8 +158,18 @@ const EditCounselorAbout = () => {
                 formData.textAlign === 'center' ? 'bg-blue-100' : 'bg-gray-100'
               } hover:bg-blue-50 transition`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
             <button
@@ -152,8 +178,18 @@ const EditCounselorAbout = () => {
                 formData.textAlign === 'right' ? 'bg-blue-100' : 'bg-gray-100'
               } hover:bg-blue-50 transition`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M4 18h16" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M10 12h10M4 18h16"
+                />
               </svg>
             </button>
           </div>
@@ -169,7 +205,12 @@ const EditCounselorAbout = () => {
             style={{
               textAlign: formData.textAlign,
               fontSize: formData.fontSize,
-              fontWeight: formData.fontStyle === '제목' ? 'bold' : formData.fontStyle === '부제목' ? '600' : 'normal',
+              fontWeight:
+                formData.fontStyle === '제목'
+                  ? 'bold'
+                  : formData.fontStyle === '부제목'
+                    ? '600'
+                    : 'normal',
             }}
             value={formData.profile}
             onChange={(e) =>
@@ -203,7 +244,12 @@ const EditCounselorAbout = () => {
             <div className="flex flex-col items-center text-center">
               <div className="mb-4">
                 <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                  <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-10 h-10 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"

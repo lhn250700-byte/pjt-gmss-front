@@ -44,8 +44,12 @@ const EditCounselorInfo = () => {
   const navigate = useNavigate();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
-  const { uploadProfileImage, saveProfileImage, editInfo, getCounselorInfo } = useAuth();
+  const [profileImage, setProfileImage] = useState({
+    imgUrl: '',
+    imgName: '',
+  });
+  const { uploadProfileImage, saveProfileImage, editInfo, getUserInfo } =
+    useAuth();
 
   const [formData, setFormData] = useState({
     newPassword: '',
@@ -57,11 +61,14 @@ const EditCounselorInfo = () => {
 
   useEffect(() => {
     const fetchCounselorInfo = async () => {
-      const data = await getCounselorInfo();
+      const data = await getUserInfo();
       const hashTags = data?.hashTags?.hashTag ?? [];
       const text = data?.text ?? '';
       setFormData({ ...formData, selectedTags: hashTags, text: text });
-      setProfileImage(data?.imgUrl);
+      setProfileImage({
+        imgUrl: data?.imgUrl,
+        imgName: data?.imgName,
+      });
     };
 
     fetchCounselorInfo();
@@ -71,7 +78,7 @@ const EditCounselorInfo = () => {
 
   const handleTagSelect = (e) => {
     const value = e.target.value;
-    if (value && !formData.selectedTags.includes(value)) {
+    if (value && !formData.selectedTags?.includes(value)) {
       setFormData({
         ...formData,
         selectedTags: [...formData.selectedTags, value],
@@ -82,28 +89,27 @@ const EditCounselorInfo = () => {
   const handleTagRemove = (tagToRemove) => {
     setFormData({
       ...formData,
-      selectedTags: formData.selectedTags.filter((tag) => tag !== tagToRemove),
+      selectedTags: formData.selectedTags?.filter((tag) => tag !== tagToRemove),
     });
   };
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      // const reader = new FileReader();
-      // reader.onloadend = () => {
-      //   setProfileImage(reader.result);
-      // };
-      // reader.readAsDataURL(file);
-
       const res = await uploadProfileImage(file);
-      await saveProfileImage(email, res.img_name, res.img_url);
-      setProfileImage(res.img_url);
+      setProfileImage({
+        imgName: res.img_name,
+        imgUrl: res.img_url,
+      });
     } else return;
   };
 
   const handleSubmit = async () => {
     // 유효성 검사
-    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+    if (
+      formData.newPassword &&
+      formData.newPassword !== formData.confirmPassword
+    ) {
       alert('비밀번호가 일치하지 않습니다.');
       return;
     }
@@ -118,36 +124,20 @@ const EditCounselorInfo = () => {
       return;
     }
 
-    // TODO: DB 연동 시 API 호출
-    // try {
-    //   const response = await fetch('/api/counselors/me', {
-    //     method: 'PUT',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Authorization': `Bearer ${token}`
-    //     },
-    //     body: JSON.stringify({
-    //       profileImage: profileImage,
-    //       password: formData.newPassword,
-    //       tags: formData.selectedTags
-    //     })
-    //   });
-    //
-    //   if (!response.ok) throw new Error('수정 실패');
-    //
-    //   const data = await response.json();
-    //   setShowSuccessModal(true);
-    // } catch (error) {
-    //   console.error('정보 수정 오류:', error);
-    //   alert('정보 수정에 실패했습니다.');
-    // }
-
     try {
-      const data = await editInfo({
+      await editInfo({
         pw: formData.newPassword || null,
         text: formData.text || null,
         hashTags: formData.selectedTags || null,
       });
+
+      if (profileImage) {
+        await saveProfileImage(
+          email,
+          profileImage.imgName || null,
+          profileImage.imgUrl || null,
+        );
+      }
 
       // 저장 로직 (백엔드 연동 시 구현)
       setShowSuccessModal(true);
@@ -176,8 +166,18 @@ const EditCounselorInfo = () => {
         {/* 헤더 */}
         <div className="bg-blue-600 text-white p-4 flex items-center">
           <button onClick={() => navigate(-1)} className="mr-4">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <h1 className="text-lg font-bold">상담사 정보 수정</h1>
@@ -189,14 +189,25 @@ const EditCounselorInfo = () => {
           <div className="flex flex-col items-center mb-6">
             <div className="w-32 h-32 rounded-full bg-gray-300 mb-4 overflow-hidden">
               {profileImage ? (
-                <img src={profileImage} alt="프로필" className="w-full h-full object-cover" />
+                <img
+                  src={profileImage}
+                  alt="프로필"
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl text-gray-500">👤</div>
+                <div className="w-full h-full flex items-center justify-center text-4xl text-gray-500">
+                  👤
+                </div>
               )}
             </div>
             <label className="bg-blue-600 text-white px-6 py-2 rounded font-medium w-full max-w-sm text-center cursor-pointer hover:bg-blue-700 transition">
               사진 추가/변경
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
             </label>
           </div>
 
@@ -208,22 +219,32 @@ const EditCounselorInfo = () => {
               placeholder="새 비밀번호"
               className="w-full p-3 mb-3 border border-gray-300 rounded"
               value={formData.newPassword}
-              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, newPassword: e.target.value })
+              }
             />
             <input
               type="password"
               placeholder="비밀번호 확인"
               className="w-full p-3 border border-gray-300 rounded"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
             />
           </div>
 
           {/* 상담 태그 설정 */}
           <div className="mb-6">
             <h2 className="text-lg font-bold mb-3">상담 태그 설정</h2>
-            <select className="w-full p-3 border border-gray-300 rounded mb-3" onChange={handleTagSelect} value="">
-              <option value="">원하는 상담 태그를 선택해주세요 (최대 3개)</option>
+            <select
+              className="w-full p-3 border border-gray-300 rounded mb-3"
+              onChange={handleTagSelect}
+              value=""
+            >
+              <option value="">
+                원하는 상담 태그를 선택해주세요 (최대 3개)
+              </option>
               {availableTags?.map((tag) => (
                 <option key={tag} value={tag}>
                   {tag}
@@ -240,7 +261,10 @@ const EditCounselorInfo = () => {
                     className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm flex items-center gap-2"
                   >
                     {tag}
-                    <button onClick={() => handleTagRemove(tag)} className="text-blue-600 hover:text-blue-800">
+                    <button
+                      onClick={() => handleTagRemove(tag)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
                       ✕
                     </button>
                   </span>
@@ -256,7 +280,9 @@ const EditCounselorInfo = () => {
               placeholder="간단한 소개 글을 입력해 주세요."
               className="w-full p-3 mb-3 border border-gray-300 rounded"
               value={formData.text}
-              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, text: e.target.value })
+              }
             />
           </div>
 
@@ -283,7 +309,9 @@ const EditCounselorInfo = () => {
         <div className="max-w-[1520px] mx-auto px-8 py-16">
           {/* HEADER */}
           <div className="mb-12">
-            <h1 className="text-4xl font-bold text-gray-800">상담사 정보 수정</h1>
+            <h1 className="text-4xl font-bold text-gray-800">
+              상담사 정보 수정
+            </h1>
           </div>
 
           {/* MAIN CONTENT */}
@@ -292,17 +320,30 @@ const EditCounselorInfo = () => {
             <div className="flex items-start gap-8 mb-12">
               {/* 프로필 사진 */}
               <div className="flex flex-col items-center">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">프로필 사진</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  프로필 사진
+                </h2>
                 <div className="w-40 h-40 rounded-full bg-gray-200 mb-4 overflow-hidden">
                   {profileImage ? (
-                    <img src={profileImage} alt="프로필" className="w-full h-full object-cover" />
+                    <img
+                      src={profileImage}
+                      alt="프로필"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-6xl text-gray-500">👤</div>
+                    <div className="w-full h-full flex items-center justify-center text-6xl text-gray-500">
+                      👤
+                    </div>
                   )}
                 </div>
                 <label className="bg-[#2563eb] text-white px-8 py-3 rounded-xl font-semibold cursor-pointer hover:bg-[#1e40af] transition text-center">
                   사진 추가/변경
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
                 </label>
               </div>
 
@@ -310,13 +351,17 @@ const EditCounselorInfo = () => {
               <div className="flex-1 flex flex-col gap-6">
                 {/* 상담 태그 설정 */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">상담 태그 설정</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                    상담 태그 설정
+                  </h3>
                   <select
                     className="w-full p-4 border-2 border-gray-300 rounded-xl mb-4 focus:border-[#2563eb] focus:outline-none transition text-base"
                     onChange={handleTagSelect}
                     value=""
                   >
-                    <option value="">원하는 상담 태그를 선택해주세요 (최대 3개)</option>
+                    <option value="">
+                      원하는 상담 태그를 선택해주세요 (최대 3개)
+                    </option>
                     {availableTags?.map((tag) => (
                       <option key={tag} value={tag}>
                         {tag}
@@ -347,37 +392,52 @@ const EditCounselorInfo = () => {
 
                 {/* 한 줄 소개글 입력 */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-3">한 줄 소개글</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">
+                    한 줄 소개글
+                  </h3>
                   <input
                     type="text"
                     placeholder="간단한 소개 글을 입력해 주세요."
                     className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-[#2563eb] focus:outline-none transition"
                     value={formData.text}
-                    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, text: e.target.value })
+                    }
                   />
                 </div>
 
                 {/* 비밀번호 변경 */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-3">비밀번호 변경</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">
+                    비밀번호 변경
+                  </h3>
                   <input
                     type="password"
                     placeholder="새 비밀번호"
                     className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-[#2563eb] focus:outline-none transition"
                     value={formData.newPassword}
-                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, newPassword: e.target.value })
+                    }
                   />
                 </div>
 
                 {/* 비밀번호 확인 */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-3">비밀번호 확인</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">
+                    비밀번호 확인
+                  </h3>
                   <input
                     type="password"
                     placeholder="비밀번호 확인"
                     className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-[#2563eb] focus:outline-none transition"
                     value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -424,12 +484,20 @@ const EditCounselorInfo = () => {
                     />
                   </svg>
                 </div>
-                <div className="text-sm lg:text-base text-gray-600">Healing Theraphy</div>
-                <div className="text-lg lg:text-xl font-bold text-gray-800">고민순삭</div>
+                <div className="text-sm lg:text-base text-gray-600">
+                  Healing Theraphy
+                </div>
+                <div className="text-lg lg:text-xl font-bold text-gray-800">
+                  고민순삭
+                </div>
               </div>
 
-              <h3 className="text-xl lg:text-2xl font-bold mb-2 lg:mb-3">정보 수정을 그만두시겠습니까?</h3>
-              <p className="text-gray-600 lg:text-lg mb-6 lg:mb-8">작성 중인 내용은 저장되지 않습니다</p>
+              <h3 className="text-xl lg:text-2xl font-bold mb-2 lg:mb-3">
+                정보 수정을 그만두시겠습니까?
+              </h3>
+              <p className="text-gray-600 lg:text-lg mb-6 lg:mb-8">
+                작성 중인 내용은 저장되지 않습니다
+              </p>
 
               <div className="w-full flex gap-3 lg:gap-4">
                 <button
@@ -475,12 +543,20 @@ const EditCounselorInfo = () => {
                     />
                   </svg>
                 </div>
-                <div className="text-sm lg:text-base text-gray-600">Healing Theraphy</div>
-                <div className="text-lg lg:text-2xl font-bold text-gray-800">고민순삭</div>
+                <div className="text-sm lg:text-base text-gray-600">
+                  Healing Theraphy
+                </div>
+                <div className="text-lg lg:text-2xl font-bold text-gray-800">
+                  고민순삭
+                </div>
               </div>
 
-              <h3 className="text-xl lg:text-2xl font-bold mb-3 lg:mb-4">정보 수정이 완료되었습니다</h3>
-              <p className="text-gray-600 lg:text-lg mb-8 lg:mb-10">정상적으로 계정이 등록되었습니다</p>
+              <h3 className="text-xl lg:text-2xl font-bold mb-3 lg:mb-4">
+                정보 수정이 완료되었습니다
+              </h3>
+              <p className="text-gray-600 lg:text-lg mb-8 lg:mb-10">
+                정상적으로 계정이 등록되었습니다
+              </p>
 
               <div className="w-full">
                 <button
