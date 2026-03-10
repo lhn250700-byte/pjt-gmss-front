@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { bbsApi, memberApi } from '../../../api/backendApi';
 import useAuth from '../../../hooks/useAuth';
+import { useAuthStore } from '../../../store/auth.store';
 import { supabase } from '../../../lib/supabase';
 
 const MBTI_OPTIONS = [
@@ -30,6 +31,8 @@ const SIZE_OPTIONS = ['10px', '12px', '14px', '16px', '18px', '22px', '28px'];
 const BoardForm = ({ mode = 'write', postId = null }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const storeEmail = useAuthStore((s) => s.email);
+  const storeNickname = useAuthStore((s) => s.nickname);
   const [boardType, setBoardType] = useState('전체');
   const [mbtiType, setMbtiType] = useState('');
   const [isCompleteOpen, setIsCompleteOpen] = useState(false);
@@ -305,18 +308,16 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                     const body = { bbs_div: bbsDiv, mbti: mbtiType || '', title, content };
                     setSubmitting(true);
                     try {
-                      // 항상 Supabase 세션에서 사용자 조회 (id는 항상 있음, email은 OAuth에 따라 없을 수 있음)
+                      // Supabase 세션 또는 Spring 로그인(store) 사용자 사용 — Spring은 member_id=email
                       const { data: { user: supaUser } } = await supabase.auth.getUser();
-                      const userIdForApi = supaUser ? (supaUser.id ?? supaUser.email ?? null) : null;
+                      const userIdForApi = (supaUser?.email ?? supaUser?.id) ?? storeEmail ?? null;
                       if (!userIdForApi || userIdForApi === 'anonymous') {
                         alert('로그인 후 글을 작성할 수 있습니다.');
                         setSubmitting(false);
                         return;
                       }
-                      await memberApi.sync({
-                        memberId: userIdForApi,
-                        nickname: supaUser.user_metadata?.nickname || (supaUser.email && supaUser.email.split('@')[0]) || 'user',
-                      });
+                      const nickname = supaUser?.user_metadata?.nickname ?? storeNickname ?? (userIdForApi.includes('@') ? userIdForApi.split('@')[0] : 'user');
+                      await memberApi.sync({ memberId: userIdForApi, nickname }).catch(() => {});
                       if (mode === 'edit' && postId) {
                         await bbsApi.update(postId, body, userIdForApi);
                       } else {
@@ -527,16 +528,14 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                     setSubmitting(true);
                     try {
                       const { data: { user: supaUser } } = await supabase.auth.getUser();
-                      const userIdForApi = supaUser ? (supaUser.id ?? supaUser.email ?? null) : null;
+                      const userIdForApi = (supaUser?.email ?? supaUser?.id) ?? storeEmail ?? null;
                       if (!userIdForApi || userIdForApi === 'anonymous') {
                         alert('로그인 후 글을 작성할 수 있습니다.');
                         setSubmitting(false);
                         return;
                       }
-                      await memberApi.sync({
-                        memberId: userIdForApi,
-                        nickname: supaUser.user_metadata?.nickname || (supaUser.email && supaUser.email.split('@')[0]) || 'user',
-                      });
+                      const nickname = supaUser?.user_metadata?.nickname ?? storeNickname ?? (userIdForApi.includes('@') ? userIdForApi.split('@')[0] : 'user');
+                      await memberApi.sync({ memberId: userIdForApi, nickname }).catch(() => {});
                       if (mode === 'edit' && postId) {
                         await bbsApi.update(postId, body, userIdForApi);
                       } else {

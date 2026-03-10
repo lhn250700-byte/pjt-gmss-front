@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAiConsultStore } from '../../../stores/useAiConsultStore';
 import useAuth from '../../../hooks/useAuth';
 import CounselorDefaultPage from '../../system/info/CounselorDefaultPage';
@@ -7,10 +7,8 @@ import { posts } from '../../user/board/boardData';
 import {
   getMonthlyPopularPosts,
   getMonthlyPopularPosts_py,
-  getRealtimePopularPosts,
   getRecommendedPosts,
   getWeeklyKeywords,
-  getWeeklyPopularPosts,
 } from '../../../api/bbsApi';
 import { useAuthStore } from '../../../store/auth.store';
 import { bbsApi } from './../../../api/backendApi';
@@ -22,6 +20,8 @@ const employment_cnsl =
   'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/employment_cnsl.png';
 
 const Home = () => {
+  const navigate = useNavigate();
+  const activeCnslId = useAiConsultStore((s) => s.activeCnslId);
   const { user, loading } = useAuth();
   const { email, accessToken } = useAuthStore();
   const [communityMode, setCommunityMode] = useState('realtime'); // realtime | week | month | recommend
@@ -30,11 +30,11 @@ const Home = () => {
 
   useEffect(() => {
     const fetchPopularPosts = async () => {
+      // 실시간/주간은 아래 useEffect에서 Spring(backendApi)으로만 조회 → FastAPI 호출 제거
+      if (communityMode === 'realtime' || communityMode === 'week') return;
       try {
         let data;
-        if (communityMode === 'realtime') data = await getRealtimePopularPosts(communityMode);
-        else if (communityMode === 'week') data = await getWeeklyPopularPosts(communityMode);
-        else if (communityMode === 'month') {
+        if (communityMode === 'month') {
           if (accessToken) {
             // 로그인 했으면 tf-idf 스코어 +
             data = await getMonthlyPopularPosts_py();
@@ -56,7 +56,6 @@ const Home = () => {
           ]);
           return;
         }
-        console.log('test', data);
         setCommunityTopPosts(
           data || [
             {
@@ -70,8 +69,12 @@ const Home = () => {
     };
 
     const fetchWeeklyKeywords = async () => {
-      const data = await getWeeklyKeywords();
-      setKeywordCloud(data?.keywords);
+      try {
+        const data = await getWeeklyKeywords();
+        setKeywordCloud(Array.isArray(data?.keywords) ? data.keywords : []);
+      } catch {
+        setKeywordCloud([]);
+      }
     };
 
     fetchPopularPosts();
@@ -250,7 +253,7 @@ const Home = () => {
             <section>
               <h4 className="text-[18px] font-bold mb-3">이번 주 키워드</h4>
               <div className="relative h-[210px] bg-white rounded-[14px] shadow-[0_10px_20px_rgba(31,41,55,0.08)] overflow-hidden">
-                {keywordCloud.map((item) => (
+                {(keywordCloud ?? []).map((item) => (
                   <span
                     key={item.keyword}
                     className={`absolute text-[#2f80ed] font-bold opacity-75 ${item.className}`}
@@ -304,10 +307,10 @@ const Home = () => {
                 </button>
               </div>
               <ol className="list-none p-0 m-0 flex flex-col gap-2">
-                {communityTopPosts?.map((p, index) => (
-                  <li key={p.bbsId || p.bbs_id} className="flex items-center gap-2.5 text-[13px] text-[#1f2937]">
+                {(communityTopPosts ?? []).map((p, index) => (
+                  <li key={p.id ?? p.bbsId ?? p.bbs_id ?? index} className="flex items-center gap-2.5 text-[13px] text-[#1f2937]">
                     <span className="font-bold text-[#4b5563] w-[26px]">{String(index + 1).padStart(2, '0')}</span>
-                    <Link to={`/board/view/${p.bbsId || p.bbs_id}`} className="truncate">
+                    <Link to={`/board/view/${p.id ?? p.bbsId ?? p.bbs_id}`} className="truncate">
                       {p.title}
                     </Link>
                   </li>
@@ -439,7 +442,7 @@ const Home = () => {
                     <p className="!text-base text-[#6b7280]">이번 주</p>
                   </div>
                   <ol className="space-y-2.5">
-                    {[...keywordCloud]
+                    {[...(keywordCloud ?? [])]
                       .map((k) => k.keyword)
                       .slice(0, 9)
                       .concat(['포트폴리오'])
@@ -545,18 +548,18 @@ const Home = () => {
                   </button>
                 </div>
                 <ol className="list-none p-0 m-0 flex flex-col gap-2.5">
-                  {communityTopPosts.map((p, index) => (
-                    <li key={p.bbsId || p.bbs_id} className="flex items-center gap-3 text-[13px] text-[#1f2937]">
+                  {(communityTopPosts ?? []).map((p, index) => (
+                    <li key={p.id ?? p.bbsId ?? p.bbs_id ?? index} className="flex items-center gap-3 text-[13px] text-[#1f2937]">
                       <span className="font-bold text-[#4b5563] w-[28px] text-center">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <Link
-                        to={`/board/view/${p.bbsId || p.bbs_id}`}
+                        to={`/board/view/${p.id ?? p.bbsId ?? p.bbs_id}`}
                         className="flex-1 truncate hover:text-[#2f80ed] font-medium transition-colors"
                       >
                         {p.title}
                       </Link>
-                      <span className="text-[11px] text-[#6b7280]">👍 {p.bbsLikeCount}</span>
+                      <span className="text-[11px] text-[#6b7280]">👍 {p.likes ?? p.bbsLikeCount ?? 0}</span>
                     </li>
                   ))}
                 </ol>

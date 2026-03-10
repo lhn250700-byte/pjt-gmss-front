@@ -23,8 +23,12 @@ import { useAuthStore } from '../../../store/auth.store';
 
 const MyPage = () => {
   const { user } = useAuth();
+  const loginStatus = useAuthStore((s) => s.loginStatus);
+  const roleName = useAuthStore((s) => s.roleName);
+  // Spring 로그인 시 roleName 사용, 없으면 Supabase/더미 기준 user.role 사용
+  const effectiveRole = loginStatus && roleName ? roleName : (user?.role ?? 'USER');
 
-  if (user.role === 'USER') {
+  if (effectiveRole === 'USER') {
     return (
       <Routes>
         <Route index element={<UserDefaultPage />} />
@@ -39,7 +43,7 @@ const MyPage = () => {
         <Route path="point-usage" element={<PointUsageHistory />} />
       </Routes>
     );
-  } else if (user.role === 'SYSTEM') {
+  } else if (effectiveRole === 'SYSTEM') {
     return (
       <Routes>
         <Route index element={<CounselorDefaultPage />} />
@@ -49,7 +53,7 @@ const MyPage = () => {
         <Route path="mycounsel" element={<MyCounsel />} />
       </Routes>
     );
-  } else if (user.role === 'ADMIN') {
+  } else if (effectiveRole === 'ADMIN') {
     return (
       <Routes>
         <Route index element={<Admin />} />

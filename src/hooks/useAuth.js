@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { authApi } from '../axios/Auth';
 import { useAuthStore } from '../store/auth.store';
 import { useNavigate } from 'react-router-dom';
+import { memberApi } from '../api/backendApi';
 
 export default function useAuth() {
   // 초기 상태: 로그아웃 상태

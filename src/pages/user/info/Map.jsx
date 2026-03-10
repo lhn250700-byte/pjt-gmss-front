@@ -72,12 +72,56 @@ const Map = () => {
     }
   }, []);
 
-  // 센터 목록: 5km 이내 → 카카오 로컬 + DB 병합, 그 외 → DB만 (API별 실패 시 나머지만 표시)
+  // 센터 목록: 검색어 있으면 카카오 키워드 검색 + DB, 없으면 5km 이내 카카오 주변 + DB 또는 DB만
   useEffect(() => {
     const fetchCenters = async () => {
       setLoading(true);
       try {
-        if (withinRadiusOnly && userLocation) {
+        const searchQuery = query.trim();
+        const hasSearchQuery = searchQuery.length > 0;
+
+        if (hasSearchQuery) {
+          // 사용자 검색어로 카카오 키워드 검색 + DB 검색 병합
+          let kakaoList = [];
+          let dbList = [];
+          try {
+            const kakaoRes = await centersApi.getKakaoKeywordSearch({
+              query: searchQuery,
+              lat: userLocation?.lat,
+              lng: userLocation?.lng,
+              radiusKm: userLocation ? RADIUS_KM : undefined,
+            });
+            const rawKakao = kakaoRes?.places ?? [];
+            kakaoList = rawKakao.map(normalizeItem);
+          } catch (e) {
+            console.warn('카카오 키워드 검색 실패:', e.message);
+          }
+          try {
+            const params = { query: searchQuery, page: 1, pageSize: 500 };
+            if (userLocation) {
+              params.lat = userLocation.lat;
+              params.lng = userLocation.lng;
+              params.radiusKm = RADIUS_KM;
+            }
+            const dbRes = await centersApi.getList(params);
+            dbList = (dbRes?.centers ?? []).map((c) => ({ ...c, source: 'db' }));
+          } catch (e) {
+            console.warn('DB 센터 목록 조회 실패:', e.message);
+          }
+          const seenIds = new Set();
+          const merged = [];
+          [...dbList, ...kakaoList].forEach((item) => {
+            const id = item.id ?? item.name;
+            if (seenIds.has(id)) return;
+            seenIds.add(id);
+            merged.push(item);
+          });
+          merged.sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
+          setCenters(merged);
+          setTotalCount(merged.length);
+          setTotalPages(Math.max(1, Math.ceil(merged.length / PAGE_SIZE)));
+          setPage(1);
+        } else if (withinRadiusOnly && userLocation) {
           let kakaoList = [];
           let dbList = [];
           try {
@@ -87,21 +131,13 @@ const Map = () => {
               radiusKm: RADIUS_KM,
             });
             const rawKakao = kakaoRes?.places ?? [];
-            const q = query.trim().toLowerCase();
-            kakaoList = rawKakao
-              .map(normalizeItem)
-              .filter(
-                (item) =>
-                  !q ||
-                  (item.name && item.name.toLowerCase().includes(q)) ||
-                  (item.address && item.address.toLowerCase().includes(q))
-              );
+            kakaoList = rawKakao.map(normalizeItem);
           } catch (e) {
             console.warn('카카오 주변 검색 실패:', e.message);
           }
           try {
             const dbRes = await centersApi.getList({
-              query: query.trim(),
+              query: '',
               page: 1,
               pageSize: 500,
               lat: userLocation.lat,
@@ -120,7 +156,7 @@ const Map = () => {
           setTotalPages(Math.max(1, Math.ceil(merged.length / PAGE_SIZE)));
           setPage(1);
         } else {
-          const params = { query: query.trim(), page, pageSize: PAGE_SIZE };
+          const params = { query: searchQuery, page, pageSize: PAGE_SIZE };
           if (userLocation) {
             params.lat = userLocation.lat;
             params.lng = userLocation.lng;

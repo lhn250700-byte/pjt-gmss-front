@@ -247,7 +247,7 @@ const MyCounsel = () => {
   }, [periodFilter, email]);
 
   useEffect(() => {
-    const cnslerId = user?.email ?? user?.id;
+    const cnslerId = email;
     if (!cnslerId) {
       setCounselHistory([]);
       setReservations([]);
