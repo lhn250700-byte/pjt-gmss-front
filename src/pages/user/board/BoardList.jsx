@@ -2,6 +2,14 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MBTI_OPTIONS, toShortDate } from './boardData';
 import { bbsApi } from '../../../api/backendApi';
+import { useAuthStore } from '../../../store/auth.store';
+import {
+  getMonthlyPopularPosts,
+  getMonthlyPopularPosts_py,
+  getRealtimePopularPosts,
+  getRecommendedPosts,
+  getWeeklyPopularPosts,
+} from '../../../api/bbsApi';
 
 // 인기글 응답 캐시 (탭별 90초) — 재요청 감소로 체감 속도 개선
 const POPULAR_CACHE_TTL_MS = 90 * 1000;
@@ -14,7 +22,8 @@ const listCache = { key: null, data: { content: [], totalPages: 1 }, ts: 0 };
 function mapPopularToPost(p) {
   return {
     id: p.bbsId,
-    category: p.bbs_div === 'NOTI' ? '공지' : p.bbs_div === 'FREE' ? '자유' : 'MBTI',
+    category:
+      p.bbs_div === 'NOTI' ? '공지' : p.bbs_div === 'FREE' ? '자유' : 'MBTI',
     isNotice: p.bbs_div === 'NOTI',
     title: p.title,
     author: '-',
@@ -30,8 +39,15 @@ function mapPopularToPost(p) {
 // 백엔드 Bbs → 프론트 목록용 포스트 형태
 function mapBbsToPost(b) {
   const author =
-    b.memberId?.nickname ?? b.memberId?.email ?? (typeof b.memberId === 'string' ? b.memberId : '알 수 없음');
-  const category = b.bbs_div === 'NOTI' ? '공지' : b.bbs_div === 'FREE' ? '자유' : b.bbs_div || '자유';
+    b.memberId?.nickname ??
+    b.memberId?.email ??
+    (typeof b.memberId === 'string' ? b.memberId : '알 수 없음');
+  const category =
+    b.bbs_div === 'NOTI'
+      ? '공지'
+      : b.bbs_div === 'FREE'
+        ? '자유'
+        : b.bbs_div || '자유';
   return {
     id: b.bbsId,
     category,
@@ -52,6 +68,8 @@ const BoardList = () => {
   const initialActiveTab = location.state?.activeTab ?? '전체';
   const initialMbtiFilter = location.state?.mbtiFilter ?? 'MBTI';
 
+  const { accessToken, email } = useAuthStore();
+
   const [activeTab, setActiveTab] = useState(initialActiveTab);
   const [mbtiFilter, setMbtiFilter] = useState(initialMbtiFilter);
   const [page, setPage] = useState(1);
@@ -68,6 +86,7 @@ const BoardList = () => {
   const [loading, setLoading] = useState(true);
   const [popularPosts, setPopularPosts] = useState([]);
   const [popularLoading, setPopularLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // 백엔드 목록 조회 (탭에 따라 bbs_div 전달)
   const bbsDivParam = useMemo(() => {
@@ -80,7 +99,9 @@ const BoardList = () => {
   useEffect(() => {
     let cancelled = false;
     const cacheKey = `${page}-${bbsDivParam ?? 'all'}`;
-    const hit = listCache.key === cacheKey && Date.now() - listCache.ts < LIST_CACHE_TTL_MS;
+    const hit =
+      listCache.key === cacheKey &&
+      Date.now() - listCache.ts < LIST_CACHE_TTL_MS;
     if (hit && listCache.data.content) {
       setPosts(listCache.data.content.map(mapBbsToPost));
       setTotalPages(listCache.data.totalPages);
@@ -93,7 +114,6 @@ const BoardList = () => {
       .then((res) => {
         if (cancelled) return;
         const list = (res.content || []).map(mapBbsToPost);
-        console.log('test', list);
         setPosts(list);
         const total = Math.max(1, res.totalPages ?? 1);
         setTotalPages(total);
@@ -115,36 +135,55 @@ const BoardList = () => {
   }, [page, bbsDivParam]);
 
   // 인기글 (실시간/주간) — 캐시 있으면 API 생략으로 즉시 표시
+  // setPopularPosts, setPopularLoading, popularTab
   useEffect(() => {
-    let cancelled = false;
-    const cacheKey = popularTab;
-    const hit = popularCache.key === cacheKey && Date.now() - popularCache.ts < POPULAR_CACHE_TTL_MS;
-    if (hit && popularCache.data.length >= 0) {
-      setPopularPosts(popularCache.data);
-      setPopularLoading(false);
-      return;
-    }
-    setPopularLoading(true);
-    const api = popularTab === 'week' ? bbsApi.getPopularWeekly : bbsApi.getPopularRealtime;
-    api()
-      .then((list) => {
-        if (cancelled) return;
-        const mapped = Array.isArray(list) ? list.map(mapPopularToPost) : [];
-        setPopularPosts(mapped);
-        popularCache.key = cacheKey;
-        popularCache.data = mapped;
-        popularCache.ts = Date.now();
-      })
-      .catch(() => {
-        if (!cancelled) setPopularPosts([]);
-      })
-      .finally(() => {
-        if (!cancelled) setPopularLoading(false);
-      });
-    return () => {
-      cancelled = true;
+    const fetchPopularPosts = async () => {
+      try {
+        let data = null; // 초기값을 null로 설정
+
+        if (popularTab === 'realtime') {
+          data = await getRealtimePopularPosts(popularTab);
+        } else if (popularTab === 'week') {
+          data = await getWeeklyPopularPosts(popularTab);
+        } else if (popularTab === 'month') {
+          if (accessToken) {
+            const res = await getMonthlyPopularPosts_py();
+            data = res?.posts;
+          } else {
+            data = await getMonthlyPopularPosts(popularTab);
+          }
+        } else if (popularTab === 'recommend') {
+          if (accessToken) {
+            data = await getRecommendedPosts(email);
+            data = data.recommendations;
+          } else {
+            data = [];
+            setErrorMessage(
+              '해당 기능은 로그인 후 사용자 행동 패턴이 수집된 경우에만 이용할 수 있습니다.',
+            );
+          }
+        }
+        setPopularLoading(true);
+        setPopularPosts(data || []);
+      } catch (error) {
+        setPopularPosts([]);
+        if (error.response) {
+          setErrorMessage(
+            error.response.data?.detail || '서버 오류가 발생했습니다.',
+          );
+        } else if (error.request) {
+          setErrorMessage('서버 응답이 없습니다. 네트워크를 확인해 주세요.');
+        } else
+          setErrorMessage(
+            error.message ||
+              '알 수 없는 에러가 발생했습니다. 새로고침을 해 주세요.',
+          );
+      } finally {
+        setPopularLoading(false);
+      }
     };
-  }, [popularTab]);
+    fetchPopularPosts();
+  }, [popularTab, accessToken, email]);
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -190,22 +229,26 @@ const BoardList = () => {
   const currentBoardTitle = boardTitleByTab[activeTab] ?? '전체 게시판';
 
   const totalPagesForPaging =
-    activeTab === '인기글' ? Math.max(1, Math.ceil(popularPosts.length / pageSize)) : totalPages;
+    activeTab === '인기글'
+      ? Math.max(1, Math.ceil(popularPosts?.length / pageSize))
+      : totalPages;
   const safePage = Math.min(page, totalPagesForPaging);
   const pagedItems = useMemo(() => {
     if (activeTab === '인기글') {
       const start = (safePage - 1) * pageSize;
-      return popularPosts.slice(start, start + pageSize);
+      return popularPosts?.slice(start, start + pageSize);
     }
     const start = (safePage - 1) * pageSize;
-    return filteredItems.slice(start, start + pageSize);
+    return filteredItems;
   }, [activeTab, filteredItems, popularPosts, safePage]);
 
   return (
     <div className="w-full">
       {/* MOBILE */}
       <div className="lg:hidden w-full max-w-[390px] min-h-screen mx-auto bg-[#f3f7ff] pb-24">
-        <header className="bg-[#1f4ecf] h-14 flex items-center justify-center text-white font-bold">고민순삭</header>
+        <header className="bg-[#1f4ecf] h-14 flex items-center justify-center text-white font-bold">
+          고민순삭
+        </header>
 
         <div className="px-4 pt-4">
           {/* 탭 버튼 */}
@@ -301,7 +344,9 @@ const BoardList = () => {
 
           {/* Mobile 헤더 - 탭에 따라 제목 변경 (DB 연동 목록) */}
           <div className="flex flex-col items-start gap-1 mb-3">
-            <h2 className="text-sm font-semibold text-gray-800">{currentBoardTitle}</h2>
+            <h2 className="text-sm font-semibold text-gray-800">
+              {currentBoardTitle}
+            </h2>
             <Link
               to="/board/write"
               className="px-2 py-0.5 rounded-md border border-blue-600 text-blue-600 text-xs self-end"
@@ -313,12 +358,19 @@ const BoardList = () => {
           {/* Mobile List */}
           <div className="border border-blue-300 rounded-md overflow-hidden bg-white">
             {loading ? (
-              <div className="px-3 py-10 text-center text-sm text-gray-500">로딩 중...</div>
+              <div className="px-3 py-10 text-center text-sm text-gray-500">
+                로딩 중...
+              </div>
             ) : pagedItems.length === 0 ? (
-              <div className="px-3 py-10 text-center text-sm text-gray-500">해당 조건의 게시글이 없습니다.</div>
+              <div className="px-3 py-10 text-center text-sm text-gray-500">
+                해당 조건의 게시글이 없습니다.
+              </div>
             ) : (
               pagedItems.map((item) => (
-                <div key={item.id} className="border-b border-blue-200 last:border-b-0 px-3 py-3">
+                <div
+                  key={item.id}
+                  className="border-b border-blue-200 last:border-b-0 px-3 py-3"
+                >
                   <div className="flex items-start gap-2">
                     {item.isNotice && (
                       <span className="text-[11px] text-blue-600 border border-blue-600 rounded-md px-2 py-0.5">
@@ -326,10 +378,15 @@ const BoardList = () => {
                       </span>
                     )}
                     <div className="flex-1">
-                      <Link to={`/board/view/${item.id}`} className="text-sm font-semibold line-clamp-2 block">
+                      <Link
+                        to={`/board/view/${item.id}`}
+                        className="text-sm font-semibold line-clamp-2 block"
+                      >
                         {item.title}
                       </Link>
-                      <p className="text-xs text-gray-500 mt-1">{item.author}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {item.author}
+                      </p>
                       <div className="flex items-center gap-3 text-[11px] text-gray-500 mt-2">
                         <span>👁 {item.views}</span>
                         <span>👍 {item.likes}</span>
@@ -366,24 +423,31 @@ const BoardList = () => {
             >
               〈
             </button>
-            {Array.from({ length: Math.min(totalPagesForPaging, 10) }, (_, index) => {
-              const pageNum = index + 1;
-              return (
-                <button
-                  key={`page-${pageNum}`}
-                  type="button"
-                  onClick={() => setPage(pageNum)}
-                  className={`px-2 py-1 rounded transition-colors ${
-                    safePage === pageNum ? 'bg-[#2f80ed] text-white font-semibold' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+            {Array.from(
+              { length: Math.min(totalPagesForPaging, 10) },
+              (_, index) => {
+                const pageNum = index + 1;
+                return (
+                  <button
+                    key={`page-${pageNum}`}
+                    type="button"
+                    onClick={() => setPage(pageNum)}
+                    className={`px-2 py-1 rounded transition-colors ${
+                      safePage === pageNum
+                        ? 'bg-[#2f80ed] text-white font-semibold'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              },
+            )}
             <button
               type="button"
-              onClick={() => setPage((prev) => Math.min(totalPagesForPaging, prev + 1))}
+              onClick={() =>
+                setPage((prev) => Math.min(totalPagesForPaging, prev + 1))
+              }
               className="px-2 py-1 hover:bg-gray-100 rounded transition-colors"
               disabled={safePage === totalPagesForPaging}
             >
@@ -435,49 +499,57 @@ const BoardList = () => {
             {/* 커뮤니티 인기글 카드 - 공지사항과 동일 높이(418px), 안쪽 글자 크기는 아래 클래스만 바꿔서 조절 */}
             <div className="flex-[2] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 flex-shrink-0">
-                <h2 className="text-[16px] font-medium text-gray-800">커뮤니티 인기글</h2>
+                <h2 className="text-[16px] font-medium text-gray-800">
+                  커뮤니티 인기글
+                </h2>
                 <div className="flex gap-2">
-                  {['realtime', 'week', 'month', 'recommend', 'reply'].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setPopularTab(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-normal transition-colors ${
-                        popularTab === tab ? 'bg-[#2f80ed] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {tab === 'realtime' && '실시간'}
-                      {tab === 'week' && '주 간'}
-                      {tab === 'month' && '월 간'}
-                      {tab === 'recommend' && '추천순'}
-                      {tab === 'reply' && '답변'}
-                    </button>
-                  ))}
+                  {['realtime', 'week', 'month', 'recommend', 'reply'].map(
+                    (tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setPopularTab(tab)}
+                        className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-normal transition-colors ${
+                          popularTab === tab
+                            ? 'bg-[#2f80ed] text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {tab === 'realtime' && '실시간'}
+                        {tab === 'week' && '주 간'}
+                        {tab === 'month' && '월 간'}
+                        {tab === 'recommend' && '추천순'}
+                        {tab === 'reply' && '답변'}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
               <div className="flex-1 min-h-0 flex flex-col bg-white p-4">
                 {popularLoading ? (
-                  <div className="flex items-center justify-center flex-1 text-sm text-gray-500">로딩 중...</div>
-                ) : (
+                  <div className="flex items-center justify-center flex-1 text-sm text-gray-500">
+                    로딩 중...
+                  </div>
+                ) : popularPosts?.length > 0 ? (
                   <div className="grid grid-cols-2 gap-x-10 gap-y-0 min-w-[580px] h-full flex-1 min-h-0">
                     {/* 왼쪽 열 (1-5) - 카드 안에서 5행 균등 간격, 제목은 한 줄 말줄임 */}
                     <div className="flex flex-col justify-between min-w-[260px] pr-4 h-full">
-                      {popularPosts.slice(0, 5).map((post, idx) => (
+                      {popularPosts?.slice(0, 5).map((post, idx) => (
                         <Link
-                          key={post.id}
-                          to={`/board/view/${post.id}`}
+                          key={post.bbsId || post.bbs_id}
+                          to={`/board/view/${post.bbsId || post.bbs_id}`}
                           className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 transition-colors flex-shrink-0 min-h-0 overflow-hidden"
                         >
                           <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gray-600 tabular-nums leading-tight">
                             {String(idx + 1).padStart(2, '0')}
                           </span>
                           <h3
-                            className="text-[5px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
-                            title={post.title}
+                            className="text-lg! font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                            title={post.title || ''}
                           >
-                            {post.title} [{post.comments}]
+                            {post.title || ''}
                           </h3>
                           <span className="flex-shrink-0 text-[10px] font-normal text-gray-500 whitespace-nowrap leading-tight">
-                            {toShortDate(post.createdAt)}
+                            👍 {post.bbsLikeCount || post.likeCnt || 0}
                           </span>
                         </Link>
                       ))}
@@ -485,27 +557,31 @@ const BoardList = () => {
 
                     {/* 오른쪽 열 (6-10) - 왼쪽과 동일 레이아웃·글자 크기 */}
                     <div className="flex flex-col justify-between min-w-[260px] border-l border-gray-200 pl-6 h-full">
-                      {popularPosts.slice(5, 10).map((post, idx) => (
+                      {popularPosts?.slice(5, 10).map((post, idx) => (
                         <Link
-                          key={post.id}
-                          to={`/board/view/${post.id}`}
+                          key={post.bbsId || post.bbs_id}
+                          to={`/board/view/${post.bbsId || post.bbs_id}`}
                           className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 transition-colors flex-shrink-0 min-h-0 overflow-hidden"
                         >
                           <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gray-600 tabular-nums leading-tight">
                             {String(idx + 6).padStart(2, '0')}
                           </span>
                           <h3
-                            className="text-[11px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
-                            title={post.title}
+                            className="text-lg! font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                            title={post.title || ''}
                           >
-                            {post.title} [{post.comments}]
+                            {post.title || ''}
                           </h3>
                           <span className="flex-shrink-0 text-[10px] font-normal text-gray-500 whitespace-nowrap leading-tight">
-                            {toShortDate(post.createdAt)}
+                            👍 {post.bbsLikeCount || post.likeCnt || 0}
                           </span>
                         </Link>
                       ))}
                     </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">
+                    {errorMessage}
                   </div>
                 )}
               </div>
@@ -514,7 +590,9 @@ const BoardList = () => {
             {/* 공지사항 카드 */}
             <div className="flex-[1] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
-                <h2 className="text-[16px] font-medium text-gray-800">공지사항</h2>
+                <h2 className="text-[16px] font-medium text-gray-800">
+                  공지사항
+                </h2>
                 <button
                   className="flex items-center gap-1 text-xs text-[#2f80ed] hover:underline font-normal"
                   onClick={() => {
@@ -526,8 +604,18 @@ const BoardList = () => {
                   }}
                 >
                   더보기
-                  <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-2 h-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -558,7 +646,9 @@ const BoardList = () => {
 
           {/* PC 헤더 - 탭에 따라 제목 변경 (DB 연동 목록) */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[16px] font-medium text-gray-800">{currentBoardTitle}</h2>
+            <h2 className="text-[16px] font-medium text-gray-800">
+              {currentBoardTitle}
+            </h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
@@ -600,7 +690,9 @@ const BoardList = () => {
                   }`}
                 >
                   {mbtiFilter === 'MBTI' ? 'MBTI' : mbtiFilter}
-                  <span className="text-[10px]">{showMbtiDropdown ? '▲' : '▼'}</span>
+                  <span className="text-[10px]">
+                    {showMbtiDropdown ? '▲' : '▼'}
+                  </span>
                 </button>
                 {showMbtiDropdown && (
                   <div className="absolute top-full mt-2 left-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 py-2 w-48 max-h-80 overflow-y-auto">
@@ -625,7 +717,9 @@ const BoardList = () => {
                           setPage(1);
                         }}
                         className={`w-full text-left px-4 py-2 text-xs font-normal hover:bg-gray-100 ${
-                          mbtiFilter === type ? 'bg-blue-50 text-[#2f80ed] font-normal' : ''
+                          mbtiFilter === type
+                            ? 'bg-blue-50 text-[#2f80ed] font-normal'
+                            : ''
                         }`}
                       >
                         {type}
@@ -677,24 +771,42 @@ const BoardList = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">게시판명</th>
-                  <th className="px-6 py-4 text-left text-[14px] font-normal text-gray-700">제 목</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">작성자</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">작성일</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-24">조회</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-24">추천</th>
+                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">
+                    번호
+                  </th>
+                  <th className="px-6 py-4 text-left text-[14px] font-normal text-gray-700">
+                    제 목
+                  </th>
+                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">
+                    작성자
+                  </th>
+                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">
+                    작성일
+                  </th>
+                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-24">
+                    조회
+                  </th>
+                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-24">
+                    추천
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-20 text-center text-[14px] text-gray-500">
+                    <td
+                      colSpan="6"
+                      className="px-6 py-20 text-center text-[14px] text-gray-500"
+                    >
                       로딩 중...
                     </td>
                   </tr>
                 ) : pagedItems.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-20 text-center text-[14px] text-gray-500">
+                    <td
+                      colSpan="6"
+                      className="px-6 py-20 text-center text-[14px] text-gray-500"
+                    >
                       해당 조건의 게시글이 없습니다.
                     </td>
                   </tr>
@@ -703,6 +815,7 @@ const BoardList = () => {
                     let postNumber = (safePage - 1) * pageSize + 1;
                     return pagedItems.map((item) => {
                       const currentNumber = item.isNotice ? null : postNumber++;
+                      console.log(item);
                       return (
                         <tr
                           key={item.id}
@@ -716,14 +829,18 @@ const BoardList = () => {
                                 공지
                               </div>
                             ) : (
-                              <span className="text-[14px] font-normal text-gray-600">{currentNumber}</span>
+                              <span className="text-[14px] font-normal text-gray-600">
+                                {currentNumber}
+                              </span>
                             )}
                           </td>
                           <td className="px-6 py-4">
                             <Link
                               to={`/board/view/${item.id}`}
                               className={`text-[16px] font-normal flex items-center gap-2 ${
-                                item.isNotice ? 'text-white' : 'text-gray-800 hover:text-[#2f80ed]'
+                                item.isNotice
+                                  ? 'text-white'
+                                  : 'text-gray-800 hover:text-[#2f80ed]'
                               }`}
                             >
                               <span className="line-clamp-1">{item.title}</span>
@@ -737,7 +854,9 @@ const BoardList = () => {
                               {item.category === 'MBTI' && item.mbti && (
                                 <span
                                   className={`inline-flex items-center text-[12px] font-normal px-2 py-0.5 rounded ${
-                                    item.isNotice ? 'bg-white text-[#2ED3C6]' : 'text-[#2f80ed] bg-blue-50'
+                                    item.isNotice
+                                      ? 'bg-white text-[#2ED3C6]'
+                                      : 'text-[#2f80ed] bg-blue-50'
                                   }`}
                                 >
                                   {item.mbti}
@@ -792,24 +911,31 @@ const BoardList = () => {
             >
               〈
             </button>
-            {Array.from({ length: Math.min(totalPagesForPaging, 10) }, (_, index) => {
-              const pageNum = index + 1;
-              return (
-                <button
-                  key={`page-${pageNum}`}
-                  type="button"
-                  onClick={() => setPage(pageNum)}
-                  className={`px-3 py-2 rounded transition-colors ${
-                    safePage === pageNum ? 'bg-[#2f80ed] text-white font-semibold' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+            {Array.from(
+              { length: Math.min(totalPagesForPaging, 10) },
+              (_, index) => {
+                const pageNum = index + 1;
+                return (
+                  <button
+                    key={`page-${pageNum}`}
+                    type="button"
+                    onClick={() => setPage(pageNum)}
+                    className={`px-3 py-2 rounded transition-colors ${
+                      safePage === pageNum
+                        ? 'bg-[#2f80ed] text-white font-semibold'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              },
+            )}
             <button
               type="button"
-              onClick={() => setPage((prev) => Math.min(totalPagesForPaging, prev + 1))}
+              onClick={() =>
+                setPage((prev) => Math.min(totalPagesForPaging, prev + 1))
+              }
               className="px-3 py-2 hover:bg-gray-100 rounded transition-colors"
               disabled={safePage === totalPagesForPaging}
             >
