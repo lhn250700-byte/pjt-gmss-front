@@ -17,6 +17,7 @@ export default function useAuth() {
     kakao_additional_done: false,
   });
   const [loading, setLoading] = useState(true);
+  const accessToken = useAuthStore((state) => state.accessToken); // accessToken 상태를 가져옵니다.
 
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const setStoreEmail = useAuthStore((state) => state.setEmail);

@@ -38,8 +38,8 @@ const CounselorProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
-      <div className="bg-blue-600 text-white p-4 flex items-center">
+      {/* 모바일 헤더 */}
+      <div className="bg-blue-600 text-white p-4 flex items-center lg:hidden">
         <button onClick={() => navigate(-1)} className="mr-4">
           <svg
             className="w-6 h-6"

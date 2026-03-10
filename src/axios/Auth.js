@@ -18,19 +18,18 @@ authApi.interceptors.request.use((config) => {
 });
 
 export const refreshAccessToken = async () => {
-  const {
-    setAccessToken,
-    setLoginStatus,
-    setEmail,
-    clearAuth,
-    setNickname,
-    setRoleName,
-  } = useAuthStore.getState();
+  const { setAccessToken, setLoginStatus, setEmail, clearAuth, setNickname, setRoleName } = useAuthStore.getState();
 
+  // try {
+  //   const accessToken = useAuthStore.getState().accessToken;
+  //   const res = await authApi.post('/api/auth/refresh', null, {
+  //     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  //   });
   try {
-    const accessToken = useAuthStore.getState().accessToken;
-    const res = await authApi.post('/api/auth/refresh', null, {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    // 주의: 인터셉터가 붙은 authApi 대신 기본 axios를 사용하여
+    // 만료된 토큰이 헤더에 포함되지 않도록 합니다.
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`, null, {
+      withCredentials: true,
     });
     const data = res.data;
     console.log('리플래쉬 자료 전송 완료');

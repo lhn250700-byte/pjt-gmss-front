@@ -11,15 +11,18 @@ import {
   getRecommendedPosts,
   getWeeklyKeywords,
   getWeeklyPopularPosts,
-} from '../../../api/bbsApi';
-import { useAuthStore } from '../../../store/auth.store';
-import { bbsApi } from './../../../api/backendApi';
+} from "../../../api/bbsApi";
+import { useAuthStore } from "../../../store/auth.store";
+import { bbsApi } from "./../../../api/backendApi";
 
-const mobileLogo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png';
-const nomal_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png';
-const career_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/career_cnsl.png';
+const mobileLogo =
+  "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png";
+const nomal_cnsl =
+  "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png";
+const career_cnsl =
+  "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/career_cnsl.png";
 const employment_cnsl =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/employment_cnsl.png';
+  "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/employment_cnsl.png";
 
 const Home = () => {
   const { user, loading } = useAuth();
@@ -34,19 +37,20 @@ const Home = () => {
   useEffect(() => {
     const fetchPopularPosts = async () => {
       try {
-        let data;
-        if (communityMode === 'realtime') data = await getRealtimePopularPosts(communityMode);
-        else if (communityMode === 'week') data = await getWeeklyPopularPosts(communityMode);
-        else if (communityMode === 'month') {
+        let data = null; // 초기값을 null로 설정
+
+        if (communityMode === "realtime") {
+          data = await getRealtimePopularPosts(communityMode);
+        } else if (communityMode === "week") {
+          data = await getWeeklyPopularPosts(communityMode);
+        } else if (communityMode === "month") {
           if (accessToken) {
-            // 로그인 했으면 tf-idf 스코어 +
-            data = await getMonthlyPopularPosts_py();
-            data = data?.posts;
+            const res = await getMonthlyPopularPosts_py();
+            data = res?.posts;
           } else {
-            // 로그인 안돼있으면 쿼리로 조회
             data = await getMonthlyPopularPosts(communityMode);
           }
-        } else {
+        } else if (communityMode === "recommend") {
           if (accessToken) {
             data = await getRecommendedPosts(email);
             data = data.recommendations;
@@ -65,13 +69,17 @@ const Home = () => {
     };
 
     const fetchWeeklyKeywords = async () => {
-      const data = await getWeeklyKeywords();
-      setKeywordCloud(data?.keywords);
+      try {
+        const data = await getWeeklyKeywords();
+        setKeywordCloud(data?.keywords || []); // undefined 방지
+      } catch (err) {
+        setKeywordCloud([]);
+      }
     };
 
     fetchPopularPosts();
     fetchWeeklyKeywords();
-  }, [communityMode]);
+  }, [communityMode, accessToken, email]); // accessToken이 변할 때(갱신 등) 다시 불러오도록 추가
 
   // TODO: DB 연동 시 실제 공지글 가져오기
   const [notices, setNotices] = useState([]);
@@ -83,16 +91,18 @@ const Home = () => {
     let cancelled = false;
     setLoadingNotices(true);
     bbsApi
-      .getList({ bbs_div: 'NOTI', page: 1, limit: 4, del_yn: 'N' })
+      .getList({ bbs_div: "NOTI", page: 1, limit: 4, del_yn: "N" })
       .then((res) => {
         if (cancelled) return;
         const content = res.content || [];
         setNotices(
           content.map((row) => ({
             id: row.bbsId,
-            title: row.title ?? '',
-            author: row.memberId?.nickname ?? row.memberId?.memberId ?? '관리자',
-            createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
+            title: row.title ?? "",
+            author:
+              row.memberId?.nickname ?? row.memberId?.memberId ?? "관리자",
+            createdAt:
+              row.created_at ?? row.createdAt ?? new Date().toISOString(),
           })),
         );
       })
@@ -147,8 +157,8 @@ const Home = () => {
   const chipClass = (active) =>
     `border px-3 py-1.5 rounded-[18px] text-[12px] cursor-pointer transition-all ${
       active
-        ? 'border-[#2f80ed] bg-[#2f80ed] text-white font-bold'
-        : 'border-[#d6e4ff] text-[#3b4a67] bg-white hover:border-[#2f80ed]'
+        ? "border-[#2f80ed] bg-[#2f80ed] text-white font-bold"
+        : "border-[#d6e4ff] text-[#3b4a67] bg-white hover:border-[#2f80ed]"
     }`;
 
   // 로딩 중일 때 표시
@@ -171,11 +181,11 @@ const Home = () => {
         <div className="lg:hidden w-full max-w-[390px] min-h-screen mx-auto bg-[#f3f7ff] pb-[24px]">
           <header className="bg-[#2a5eea] h-16 flex items-center justify-center">
             <div className="flex items-center gap-2 text-white font-bold text-lg">
-              {/* <span className="text-lg leading-none" aria-hidden="true">
-                ★
-              </span>
-              <span>고민순삭</span> */}
-              <img src={mobileLogo} alt="로고" style={{ width: '60px', height: 'auto' }} />
+              <img
+                src={mobileLogo}
+                alt="로고"
+                className="w-18 h-auto"
+              />
             </div>
           </header>
 
@@ -188,9 +198,15 @@ const Home = () => {
               }}
             >
               <div>
-                <p className="text-sm leading-[1.4] font-semibold">우리를 망치는 것은 다른 사람들의 눈을</p>
-                <p className="text-sm leading-[1.4] font-semibold">지나치게 의식하는 것이다.</p>
-                <span className="block mt-2 text-[11px] font-normal opacity-90">벤자민 프랭클린 | 명언/명대사</span>
+                <p className="text-sm leading-[1.4] font-semibold">
+                  우리를 망치는 것은 다른 사람들의 눈을
+                </p>
+                <p className="text-sm leading-[1.4] font-semibold">
+                  지나치게 의식하는 것이다.
+                </p>
+                <span className="block mt-2 text-[11px] font-normal opacity-90">
+                  벤자민 프랭클린 | 명언/명대사
+                </span>
               </div>
             </section>
 
@@ -202,12 +218,16 @@ const Home = () => {
                 className="flex items-center justify-center gap-4 px-4 py-[22px] rounded-[14px] text-white no-underline shadow-[0_8px_16px_rgba(0,0,0,0.08)] bg-gradient-to-r from-[#2ed3c6] to-[#26b8ad]"
               >
                 <div className="w-16 h-16 rounded-full border-2 border-white/70 flex items-center justify-center font-bold text-2xl bg-white/10">
-                  <span>💬</span>
+                  <img src={nomal_cnsl} alt="고민상담" className="w-12"/>
                 </div>
                 <div>
                   <h3 className="text-[20px] font-bold mb-1.5">고민 상담</h3>
-                  <p className="text-[13px] font-medium">혼자서 풀지 못하던 고민,</p>
-                  <p className="text-[13px] font-medium">지금 마음부터 가볍게 정리해보세요.</p>
+                  <p className="text-[13px] font-medium">
+                    혼자서 풀지 못하던 고민,
+                  </p>
+                  <p className="text-[13px] font-medium">
+                    지금 마음부터 가볍게 정리해보세요.
+                  </p>
                 </div>
               </Link>
 
@@ -217,12 +237,16 @@ const Home = () => {
                 className="flex items-center justify-center gap-4 px-4 py-[22px] rounded-[14px] text-white no-underline shadow-[0_8px_16px_rgba(0,0,0,0.08)] bg-gradient-to-r from-[#4f9bff] to-[#2f80ed]"
               >
                 <div className="w-16 h-16 rounded-full border-2 border-white/70 flex items-center justify-center font-bold text-2xl bg-white/10">
-                  <span>💼</span>
+                                    <img src={career_cnsl} alt="커리어상담" className="w-10"/>
                 </div>
                 <div>
                   <h3 className="text-[20px] font-bold mb-1.5">커리어 상담</h3>
-                  <p className="text-[13px] font-medium">지금의 선택이 맞는지,</p>
-                  <p className="text-[13px] font-medium">커리어 방향을 함께 점검해드려요.</p>
+                  <p className="text-[13px] font-medium">
+                    지금의 선택이 맞는지,
+                  </p>
+                  <p className="text-[13px] font-medium">
+                    커리어 방향을 함께 점검해드려요.
+                  </p>
                 </div>
               </Link>
 
@@ -232,12 +256,16 @@ const Home = () => {
                 className="flex items-center justify-center gap-4 px-4 py-[22px] rounded-[14px] text-white no-underline shadow-[0_8px_16px_rgba(0,0,0,0.08)] bg-gradient-to-r from-[#2563eb] to-[#1e40af]"
               >
                 <div className="w-16 h-16 rounded-full border-2 border-white/70 flex items-center justify-center font-bold text-2xl bg-white/10">
-                  <span>📝</span>
+                                    <img src={employment_cnsl} alt="취업상담" className="w-10"/>
                 </div>
                 <div>
                   <h3 className="text-[20px] font-bold mb-1.5">취업 상담</h3>
-                  <p className="text-[13px] font-medium">이력서부터 면접까지,</p>
-                  <p className="text-[13px] font-medium">합격에 필요한 전략을 전해드립니다.</p>
+                  <p className="text-[13px] font-medium">
+                    이력서부터 면접까지,
+                  </p>
+                  <p className="text-[13px] font-medium">
+                    합격에 필요한 전략을 전해드립니다.
+                  </p>
                 </div>
               </Link>
             </section>
@@ -258,7 +286,7 @@ const Home = () => {
                 <h4 className="text-[18px] font-bold">커뮤니티 인기글</h4>
                 <Link
                   to="/board"
-                  state={{ activeTab: '인기글' }}
+                  state={{ activeTab: "인기글" }}
                   className="text-[12px] text-[#6b7280] bg-transparent border-0"
                 >
                   전체 보기 &gt;
@@ -267,29 +295,29 @@ const Home = () => {
               <div className="flex gap-2 my-3">
                 <button
                   type="button"
-                  className={chipClass(communityMode === 'realtime')}
-                  onClick={() => setCommunityMode('realtime')}
+                  className={chipClass(communityMode === "realtime")}
+                  onClick={() => setCommunityMode("realtime")}
                 >
                   실시간
                 </button>
                 <button
                   type="button"
-                  className={chipClass(communityMode === 'week')}
-                  onClick={() => setCommunityMode('week')}
+                  className={chipClass(communityMode === "week")}
+                  onClick={() => setCommunityMode("week")}
                 >
                   주간
                 </button>
                 <button
                   type="button"
-                  className={chipClass(communityMode === 'month')}
-                  onClick={() => setCommunityMode('month')}
+                  className={chipClass(communityMode === "month")}
+                  onClick={() => setCommunityMode("month")}
                 >
                   월간
                 </button>
                 <button
                   type="button"
-                  className={chipClass(communityMode === 'recommend')}
-                  onClick={() => setCommunityMode('recommend')}
+                  className={chipClass(communityMode === "recommend")}
+                  onClick={() => setCommunityMode("recommend")}
                 >
                   추천순
                 </button>
@@ -325,15 +353,20 @@ const Home = () => {
             >
               <div>
                 <p className="!text-5xl leading-[1.5] !font-semibold mb-5">
-                  우리를 망치는 것은 다른 사람들의 눈을 지나치게 의식하는 것이다.
+                  우리를 망치는 것은 다른 사람들의 눈을 지나치게 의식하는
+                  것이다.
                 </p>
-                <span className="block text-[13px] font-normal opacity-90">벤자민 프랭클린 | 명언/명대사</span>
+                <span className="block text-[13px] font-normal opacity-90">
+                  벤자민 프랭클린 | 명언/명대사
+                </span>
               </div>
             </section>
 
             {/* QUICK TEST */}
             <section className="my-10">
-              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">내 취업 간단 테스트</h3>
+              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">
+                내 취업 간단 테스트
+              </h3>
               <div className="grid grid-cols-3 gap-4">
                 {[
                   {
@@ -362,8 +395,12 @@ const Home = () => {
                         테스트
                       </span>
                     </div>
-                    <p className="!text-2xl !font-medium text-[#111827] mb-2">{t.title}</p>
-                    <p className="!text-xl text-[#6b7280] leading-relaxed">{t.desc}</p>
+                    <p className="!text-2xl !font-medium text-[#111827] mb-2">
+                      {t.title}
+                    </p>
+                    <p className="!text-xl text-[#6b7280] leading-relaxed">
+                      {t.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -372,12 +409,20 @@ const Home = () => {
             {/* MAIN CTA */}
             {/* TODO: DB 연동 시 각 버튼의 링크를 실제 상담 서비스로 연결 */}
             <section className="my-10">
-              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">지금 나에게 필요한 상담은 무엇인가요?</h3>
+              <h3 className="!text-4xl !font-semibold text-[#111827] mb-8">
+                지금 나에게 필요한 상담은 무엇인가요?
+              </h3>
               <div className="grid grid-cols-3 gap-5">
                 {/* 고민 상담 → AI 상담 */}
                 <button
                   type="button"
-                  onClick={() => navigate(activeCnslId ? `/chat/withai/${activeCnslId}` : '/chat/withai')}
+                  onClick={() =>
+                    navigate(
+                      activeCnslId
+                        ? `/chat/withai/${activeCnslId}`
+                        : "/chat/withai",
+                    )
+                  }
                   className="bg-gradient-to-br from-[#2ed3c6] to-[#26b8ad] rounded-[20px] p-8 text-white shadow-[0_8px_24px_rgba(46,211,198,0.25)] hover:shadow-[0_12px_32px_rgba(46,211,198,0.35)] hover:scale-[1.02] transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[200px] border-0 cursor-pointer"
                 >
                   <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center text-[52px] mb-4">
@@ -427,28 +472,37 @@ const Home = () => {
 
             {/* KEYWORDS */}
             <section className="mb-8">
-              <h3 className="!text-4xl !font-bold text-[#111827] mb-4">이번 주 키워드</h3>
+              <h3 className="!text-4xl !font-bold text-[#111827] mb-4">
+                이번 주 키워드
+              </h3>
               <div className="grid grid-cols-2 gap-5">
                 <div className="relative bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] overflow-hidden p-6 h-full min-h-[320px] flex items-center justify-center">
                   <img src="http://localhost:8000/weekly-wordcloud" className="" />
                 </div>
                 <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <p className="!text-3xl !font-semibold text-[#111827]">상위 키워드 TOP 10</p>
+                    <p className="!text-3xl !font-semibold text-[#111827]">
+                      상위 키워드 TOP 10
+                    </p>
                     <p className="!text-base text-[#6b7280]">이번 주</p>
                   </div>
                   <ol className="space-y-2.5">
                     {[...keywordCloud]
                       .map((k) => k.keyword)
                       .slice(0, 9)
-                      .concat(['포트폴리오'])
+                      .concat(["포트폴리오"])
                       .slice(0, 10)
                       .map((t, idx) => (
-                        <li key={`${t}-${idx}`} className="flex items-center gap-3 !text-[18px]">
+                        <li
+                          key={`${t}-${idx}`}
+                          className="flex items-center gap-3 !text-[18px]"
+                        >
                           <span className="w-7 text-right font-bold text-[#4b5563]">
-                            {String(idx + 1).padStart(2, '0')}
+                            {String(idx + 1).padStart(2, "0")}
                           </span>
-                          <span className="flex-1 text-[#111827] !font-medium">{t}</span>
+                          <span className="flex-1 text-[#111827] !font-medium">
+                            {t}
+                          </span>
                         </li>
                       ))}
                   </ol>
@@ -461,19 +515,25 @@ const Home = () => {
               {/* 공지사항 */}
               <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-[18px] font-bold text-[#111827]">공지사항</h4>
+                  <h4 className="text-[18px] font-bold text-[#111827]">
+                    공지사항
+                  </h4>
                   <Link
                     to="/board"
-                    state={{ activeTab: '공지사항' }}
+                    state={{ activeTab: "공지사항" }}
                     className="text-[12px] text-[#6b7280] hover:text-[#2f80ed]"
                   >
                     더보기 &gt;
                   </Link>
                 </div>
                 {loadingNotices ? (
-                  <p className="text-[13px] text-[#6b7280] py-6">공지사항을 불러오는 중...</p>
+                  <p className="text-[13px] text-[#6b7280] py-6">
+                    공지사항을 불러오는 중...
+                  </p>
                 ) : notices.length === 0 ? (
-                  <p className="text-[13px] text-[#6b7280] py-6">등록된 공지사항이 없습니다.</p>
+                  <p className="text-[13px] text-[#6b7280] py-6">
+                    등록된 공지사항이 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-3">
                     {notices.map((notice) => (
@@ -490,9 +550,14 @@ const Home = () => {
                           />
                         </div>
                         <div className="p-3">
-                          <p className="text-[13px] font-bold text-[#111827] line-clamp-1 mb-1">{notice.title}</p>
+                          <p className="text-[13px] font-bold text-[#111827] line-clamp-1 mb-1">
+                            {notice.title}
+                          </p>
                           <p className="text-[11px] text-[#6b7280]">
-                            {notice.author} | {new Date(notice.createdAt).toLocaleDateString('ko-KR')}
+                            {notice.author} |{" "}
+                            {new Date(notice.createdAt).toLocaleDateString(
+                              "ko-KR",
+                            )}
                           </p>
                         </div>
                       </Link>
@@ -504,10 +569,12 @@ const Home = () => {
               {/* 커뮤니티 인기글 */}
               <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-[18px] font-bold text-[#111827]">커뮤니티 인기글</h4>
+                  <h4 className="text-[18px] font-bold text-[#111827]">
+                    커뮤니티 인기글
+                  </h4>
                   <Link
                     to="/board"
-                    state={{ activeTab: '인기글' }}
+                    state={{ activeTab: "인기글" }}
                     className="text-[12px] text-[#6b7280] hover:text-[#2f80ed]"
                   >
                     전체 보기 &gt;
@@ -516,29 +583,29 @@ const Home = () => {
                 <div className="flex gap-2 mb-4">
                   <button
                     type="button"
-                    className={chipClass(communityMode === 'realtime')}
-                    onClick={() => setCommunityMode('realtime')}
+                    className={chipClass(communityMode === "realtime")}
+                    onClick={() => setCommunityMode("realtime")}
                   >
                     실시간
                   </button>
                   <button
                     type="button"
-                    className={chipClass(communityMode === 'week')}
-                    onClick={() => setCommunityMode('week')}
+                    className={chipClass(communityMode === "week")}
+                    onClick={() => setCommunityMode("week")}
                   >
                     주간
                   </button>
                   <button
                     type="button"
-                    className={chipClass(communityMode === 'month')}
-                    onClick={() => setCommunityMode('month')}
+                    className={chipClass(communityMode === "month")}
+                    onClick={() => setCommunityMode("month")}
                   >
                     월간
                   </button>
                   <button
                     type="button"
-                    className={chipClass(communityMode === 'recommend')}
-                    onClick={() => setCommunityMode('recommend')}
+                    className={chipClass(communityMode === "recommend")}
+                    onClick={() => setCommunityMode("recommend")}
                   >
                     추천순
                   </button>
