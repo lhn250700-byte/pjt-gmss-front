@@ -1,6 +1,6 @@
 import { authApi } from '../axios/Auth';
 
-export const fetchMyCommentList = async (page = 0, size = 20, keyword = '', token) => {
+export const fetchMyCommentList = async (page = 0, size = 20, keyword = '') => {
   try {
     const response = await authApi.get('/api/mypage/commentlist', {
       params: {
@@ -9,9 +9,6 @@ export const fetchMyCommentList = async (page = 0, size = 20, keyword = '', toke
         page: page,
         size: size,
         sort: 'createdAt,desc',
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;

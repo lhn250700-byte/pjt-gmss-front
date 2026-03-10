@@ -22,13 +22,12 @@ const MyPost = () => {
 
   // 데이터 로드
   const fetchPosts = useCallback(async () => {
-    console.log('fetchPosts 실행 시도, 토큰 상태:', token); // 이 로그가 찍히는지 확인
-    if (!token) return;
-
     setLoading(true);
     try {
       // API 호출 (Spring Boot 0-indexed page)
-      const data = await getMyBbsList(token, searchQuery, page - 1, pageSize);
+      const data = await getMyBbsList(searchQuery, page - 1, pageSize);
+
+      console.log('test', data);
 
       setServerPosts(data.content || []);
       setTotalPages(data.totalPages || 1);

@@ -15,13 +15,12 @@ const CounselList = () => {
 
   const fetchData = async () => {
     // 1. 토큰이 없으면 호출하지 않음
-    if (!token) return;
 
     setIsLoading(true);
     try {
       // 2. API 호출 시 token과 activeTab을 함께 전달 (백엔드 요구사항에 따라 인자 조절)
       // Spring Boot Pageable은 0부터 시작하므로 page - 1
-      const response = await getMyCnslList(page - 1, pageSize, token);
+      const response = await getMyCnslList(page - 1, pageSize);
 
       setCounsels(response.content || []);
       setTotalElements(response.totalElements || 0);

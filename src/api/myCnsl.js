@@ -4,7 +4,6 @@ import { authApi } from '../axios/Auth';
 export const getMyCnslList = async (page = 0, size = 10, token) => {
   const response = await authApi.get('/api/mypage/cnsllist', {
     params: { page, size },
-    headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };

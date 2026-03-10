@@ -2,10 +2,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
 import { fetchMyCommentList } from '../../../api/myCmList';
+import { useAuthStore } from '../../../store/auth.store';
 
 const MyComment = () => {
   const { accessToken: token } = useAuth(); // useAuth에서 token 가져오기
   const navigate = useNavigate();
+  const { accessToken } = useAuthStore();
 
   // 상태 관리
   const [comments, setComments] = useState([]);
@@ -17,15 +19,15 @@ const MyComment = () => {
   const [searchInput, setSearchInput] = useState(''); // 입력창 값
   const [searchQuery, setSearchQuery] = useState(''); // 실제 검색에 사용될 값
 
-  const pageSize = 20;
+  const pageSize = 10;
 
   // 데이터 페칭 함수
   const loadComments = useCallback(async () => {
-    if (!token) return;
     setIsLoading(true);
     try {
       // searchField를 제거하고 searchQuery와 token만 전달
-      const data = await fetchMyCommentList(page - 1, pageSize, searchQuery, token);
+      const data = await fetchMyCommentList(page - 1, pageSize, searchQuery);
+      console.log('test', data);
 
       setComments(data.content || []);
       setTotalPages(data.totalPages || 1);
@@ -34,7 +36,7 @@ const MyComment = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, searchQuery]); // searchQuery가 바뀔 때 재호출
+  }, [accessToken, page, searchQuery]); // searchQuery가 바뀔 때 재호출
 
   useEffect(() => {
     loadComments();
@@ -61,42 +63,21 @@ const MyComment = () => {
   // 페이지네이션 렌더링 (로직 최적화)
   const renderPagination = () => {
     if (totalPages <= 1) return null;
-    const pages = [];
-    const maxVisible = 5;
+
+    const maxVisible = 10;
+    // 현재 페이지를 중심으로 앞뒤 범위를 계산
     let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
 
+    // 끝 페이지가 부족할 경우 시작 페이지를 더 앞으로 당김
     if (endPage - startPage + 1 < maxVisible) {
       startPage = Math.max(1, endPage - maxVisible + 1);
     }
 
-    return (
-      <div className="flex items-center gap-1">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className={`w-8 h-8 flex items-center justify-center rounded ${page === 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
-        >
-          &lt;
-        </button>
-        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((i) => (
-          <button
-            key={i}
-            onClick={() => setPage(i)}
-            className={`w-8 h-8 flex items-center justify-center rounded ${i === page ? 'bg-[#2f80ed] text-white font-semibold' : 'text-gray-600 hover:bg-gray-100'}`}
-          >
-            {i}
-          </button>
-        ))}
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          className={`w-8 h-8 flex items-center justify-center rounded ${page === totalPages ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
-        >
-          &gt;
-        </button>
-      </div>
-    );
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
   };
 
   return (
@@ -184,7 +165,7 @@ const MyComment = () => {
                         <div className="font-medium line-clamp-1">{item.title}</div>
                       </td>
                       <td className="px-6 py-4 ">
-                        <div className='text-gray-600 line-clamp-1'>{item.content}</div>
+                        <div className="text-gray-600 line-clamp-1">{item.content}</div>
                       </td>
                       <td className="px-6 py-4 text-center text-gray-500">{formatDate(item.createdAt)}</td>
                       <td className="px-6 py-4 text-center">{item.clikeCount || 0}</td>
@@ -196,25 +177,44 @@ const MyComment = () => {
           </div>
 
           {/* 페이지네이션 & 검색 */}
-          <div className="mt-8 flex flex-col items-center gap-6">
-            {renderPagination()}
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="댓글 내용으로 검색"
-                className="w-80 px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#2f80ed]"
-              />
+          {/* <div className="flex items-center gap-1">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className={`w-8 h-8 flex items-center justify-center rounded ${page === 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              &lt;
+            </button>
+            {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((i) => (
               <button
-                onClick={handleSearch}
-                className="px-8 py-2 bg-[#2f80ed] text-white rounded-lg hover:bg-[#2670d4]"
+                key={i}
+                onClick={() => setPage(i)}
+                className={`w-8 h-8 flex items-center justify-center rounded ${i === page ? 'bg-[#2f80ed] text-white font-semibold' : 'text-gray-600 hover:bg-gray-100'}`}
               >
-                검색
+                {i}
               </button>
-            </div>
+            ))}
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className={`w-8 h-8 flex items-center justify-center rounded ${page === totalPages ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              &gt;
+            </button>
+          </div> */}
+
+          <div className="flex justify-center gap-2">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="댓글 내용으로 검색"
+              className="w-80 px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#2f80ed]"
+            />
+            <button onClick={handleSearch} className="px-8 py-2 bg-[#2f80ed] text-white rounded-lg hover:bg-[#2670d4]">
+              검색
+            </button>
           </div>
         </div>
       </div>
