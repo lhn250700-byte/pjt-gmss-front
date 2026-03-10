@@ -557,7 +557,7 @@ const Home = () => {
                           >
                             {p.title}
                           </Link>
-                          <span className="text-[11px] text-[#6b7280]">👍 {p.bbsLikeCount}</span>
+                          <span className="text-[11px] text-[#6b7280]">👍 {p.bbsLikeCount || p.likeCnt || 0}</span>
                         </li>
                       );
                     })}
