@@ -10,6 +10,16 @@ const UserDefaultPage = () => {
   const { nickname, email, accessToken } = useAuthStore();
   const [userPoints, setUserPoints] = useState(0);
 
+  const modifyimg = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/user_modify.png";
+
+  const bbsList = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/bbs_list.png";
+
+  const cmList = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/cm_list.png";
+
+  const cnslList = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/cnsl_list.png";
+
+  
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
@@ -218,21 +228,8 @@ const UserDefaultPage = () => {
               to="/mypage/editinfo"
               className="bg-[#1e40af] hover:bg-[#1e3a8a] rounded-3xl p-12 flex flex-col items-center justify-center gap-6 shadow-lg transition-colors h-[280px]"
             >
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#1e40af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center">
+                <img src={modifyimg} alt="회원정보 수정" className="w-24 h-auto" />
               </div>
               <span className="text-white font-bold text-2xl">회원정보 수정</span>
             </Link>
@@ -242,16 +239,8 @@ const UserDefaultPage = () => {
               to="/mypage/clist"
               className="bg-[#3b82f6] hover:bg-[#2563eb] rounded-3xl p-12 flex flex-col items-center justify-center gap-6 shadow-lg transition-colors h-[280px]"
             >
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#3b82f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                  <circle cx="12" cy="13" r="3" strokeWidth={2} />
-                </svg>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center">
+                <img src={cnslList} alt="상담 내역" className="w-24 h-auto" />
               </div>
               <span className="text-white font-bold text-2xl">상담 내역</span>
             </Link>
@@ -261,21 +250,8 @@ const UserDefaultPage = () => {
               to="/mypage/postlist"
               className="bg-[#1e40af] hover:bg-[#1e3a8a] rounded-3xl p-12 flex flex-col items-center justify-center gap-6 shadow-lg transition-colors h-[280px]"
             >
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#1e40af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center">
+                <img src={bbsList} alt="내 작성 글" className="w-24 h-auto" />
               </div>
               <span className="text-white font-bold text-2xl">내 작성 글</span>
             </Link>
@@ -285,15 +261,8 @@ const UserDefaultPage = () => {
               to="/mypage/commentlist"
               className="bg-[#3b82f6] hover:bg-[#2563eb] rounded-3xl p-12 flex flex-col items-center justify-center gap-6 shadow-lg transition-colors h-[280px]"
             >
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#3b82f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center">
+                <img src={cmList} alt="내 작성 댓글" className="w-24 h-auto" />
               </div>
               <span className="text-white font-bold text-2xl">내 작성 댓글</span>
             </Link>

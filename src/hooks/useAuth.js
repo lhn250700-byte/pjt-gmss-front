@@ -16,6 +16,7 @@ export default function useAuth() {
     kakao_additional_done: false,
   });
   const [loading, setLoading] = useState(true);
+  const accessToken = useAuthStore((state) => state.accessToken); // accessToken 상태를 가져옵니다.
 
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const setStoreEmail = useAuthStore((state) => state.setEmail);
@@ -285,5 +286,5 @@ export default function useAuth() {
       console.error('닉네임 중복 확인 실패', error);
     }
   };
-  return { user, loading, signIn, signUp, getmemberInfoNicknameCheckYn };
+  return { user, loading, signIn, signUp, getmemberInfoNicknameCheckYn, accessToken };
 }
