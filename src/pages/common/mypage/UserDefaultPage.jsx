@@ -17,12 +17,20 @@ const UserDefaultPage = () => {
 
   useEffect(() => {
     const fetchMyPoint = async () => {
-      const data = await getMyPoint(email);
-      setUserPoints(data);
+      if (!email) {
+        setUserPoints(0);
+        return;
+      }
+      try {
+        const data = await getMyPoint(email);
+        setUserPoints(data ?? 0);
+      } catch {
+        setUserPoints(0);
+      }
     };
 
-    fetchMyPoint();
-  }, [accessToken, nickname]);
+    fetchMyPoint().catch(() => {});
+  }, [email, accessToken, nickname]);
 
   return (
     <>

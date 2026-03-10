@@ -42,7 +42,12 @@ export const refreshAccessToken = async () => {
     setNickname(data.nickname);
     setRoleName(data.roleNames[0]);
   } catch (error) {
-    console.error('토큰 갱신 실패 : ', error);
+    // FastAPI(localhost:8000) 미실행 시 ERR_NETWORK 발생 가능 → 경고만 출력
+    if (error?.code === 'ERR_NETWORK') {
+      console.warn('토큰 갱신 스킵 (auth API 연결 불가. VITE_API_BASE_URL 서버가 꺼져 있으면 정상 동작입니다.)');
+    } else {
+      console.error('토큰 갱신 실패 : ', error);
+    }
     clearAuth();
     return null;
   }

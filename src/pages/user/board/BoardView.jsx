@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
+import { useAuthStore } from '../../../store/auth.store';
 import { bbsApi } from '../../../api/backendApi';
 
 const formatCommentDate = (dateStr) => {
@@ -13,6 +14,8 @@ const BoardView = () => {
   const { b_id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const storeEmail = useAuthStore((s) => s.email);
+  const storeAccessToken = useAuthStore((s) => s.accessToken);
   const postId = useMemo(() => Number(b_id), [b_id]);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -118,12 +121,14 @@ const BoardView = () => {
     return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [comments, sort]);
 
-  const userIdForApi = user?.email ?? user?.id;
+  // Supabase 세션 또는 Spring 로그인(store) — Spring 로그인 시 user는 비어 있음
+  const userIdForApi = user?.email ?? user?.id ?? storeEmail ?? null;
+  const isLoggedIn = user?.isLogin === true || !!storeAccessToken;
 
   const handleSubmitComment = () => {
     const text = commentInput.trim();
     if (!text) return;
-    if (!user?.isLogin) {
+    if (!isLoggedIn || !userIdForApi) {
       alert('로그인 후 댓글을 작성할 수 있습니다.');
       return;
     }
@@ -138,7 +143,7 @@ const BoardView = () => {
   };
 
   const handleDeletePost = () => {
-    if (!user?.isLogin) {
+    if (!isLoggedIn) {
       alert('로그인 후 삭제할 수 있습니다.');
       return;
     }
@@ -162,7 +167,7 @@ const BoardView = () => {
 
   const handleLike = (isLike) => {
     if (likeSubmitting) return;
-    if (!user?.isLogin) {
+    if (!isLoggedIn) {
       alert('로그인 후 좋아요를 누를 수 있습니다.');
       return;
     }
@@ -237,13 +242,14 @@ const BoardView = () => {
 상세 화면 테스트를 위해 만들어진 페이지이며, 추후 실제 API 연동 시 게시글 본문/댓글을 서버에서 받아오도록 변경하면 됩니다.`}
           </div>
 
-          {/* 좋아요/싫어요 */}
+          {/* 좋아요/싫어요 - 로그인 시에만 활성화 */}
           <div className="flex items-center justify-center gap-5 py-4 border-y border-blue-300">
             <button
               type="button"
               onClick={() => handleLike(true)}
-              disabled={likeSubmitting}
+              disabled={likeSubmitting || !isLoggedIn}
               className="flex flex-col items-center gap-1 text-blue-600 text-xs disabled:opacity-60"
+              title={!isLoggedIn ? '로그인 후 좋아요를 누를 수 있습니다.' : ''}
             >
               <span className="w-10 h-10 rounded-full border-2 border-blue-400 flex items-center justify-center text-xl">
                 👍
@@ -254,8 +260,9 @@ const BoardView = () => {
             <button
               type="button"
               onClick={() => handleLike(false)}
-              disabled={likeSubmitting}
+              disabled={likeSubmitting || !isLoggedIn}
               className="flex flex-col items-center gap-1 text-gray-500 text-xs disabled:opacity-60"
+              title={!isLoggedIn ? '로그인 후 싫어요를 누를 수 있습니다.' : ''}
             >
               <span className="w-10 h-10 rounded-full border-2 border-gray-400 flex items-center justify-center text-xl">
                 👎
@@ -285,16 +292,16 @@ const BoardView = () => {
             <textarea
               rows={3}
               className="w-full resize-none text-sm font-normal outline-none"
-              placeholder={user?.isLogin ? '댓글을 입력해주세요' : '로그인 후 댓글을 달 수 있습니다.'}
+              placeholder={isLoggedIn ? '댓글을 입력해주세요' : '로그인 후 댓글을 달 수 있습니다.'}
               value={commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
-              readOnly={!user?.isLogin}
+              readOnly={!isLoggedIn}
             />
             <div className="flex justify-end mt-2">
               <button
                 type="button"
                 onClick={handleSubmitComment}
-                disabled={commentSubmitting || !user?.isLogin}
+                disabled={commentSubmitting || !isLoggedIn}
                 className="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-normal transition-colors disabled:opacity-60"
               >
                 {commentSubmitting ? '등록 중...' : '등록'}
@@ -329,7 +336,7 @@ const BoardView = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold">{comment.author}</p>
-                      {user && String(comment.memberId) === String(userIdForApi) && (
+                      {userIdForApi && String(comment.memberId) === String(userIdForApi) && (
                         <button
                           onClick={() => {
                             setSelectedCommentId(comment.id);
@@ -441,13 +448,14 @@ const BoardView = () => {
 상세 화면 테스트를 위해 만들어진 페이지이며, 추후 실제 API 연동 시 게시글 본문/댓글을 서버에서 받아오도록 변경하면 됩니다.`}
             </div>
 
-            {/* 좋아요/싫어요 */}
+            {/* 좋아요/싫어요 - 로그인 시에만 활성화 */}
             <div className="flex items-center justify-center gap-8 py-6 border-y border-gray-200">
               <button
                 type="button"
                 onClick={() => handleLike(true)}
-                disabled={likeSubmitting}
+                disabled={likeSubmitting || !isLoggedIn}
                 className="flex flex-col items-center gap-2 text-blue-600 text-sm disabled:opacity-60"
+                title={!isLoggedIn ? '로그인 후 좋아요를 누를 수 있습니다.' : ''}
               >
                 <span className="w-14 h-14 rounded-full border-2 border-blue-400 flex items-center justify-center text-2xl">
                   👍
@@ -458,8 +466,9 @@ const BoardView = () => {
               <button
                 type="button"
                 onClick={() => handleLike(false)}
-                disabled={likeSubmitting}
+                disabled={likeSubmitting || !isLoggedIn}
                 className="flex flex-col items-center gap-2 text-gray-500 text-sm disabled:opacity-60"
+                title={!isLoggedIn ? '로그인 후 싫어요를 누를 수 있습니다.' : ''}
               >
                 <span className="w-14 h-14 rounded-full border-2 border-gray-400 flex items-center justify-center text-2xl">
                   👎
@@ -489,16 +498,16 @@ const BoardView = () => {
               <textarea
                 rows={3}
                 className="w-full resize-none text-base font-normal outline-none bg-transparent"
-                placeholder={user?.isLogin ? '댓글을 입력해주세요' : '로그인 후 댓글을 달 수 있습니다.'}
+                placeholder={isLoggedIn ? '댓글을 입력해주세요' : '로그인 후 댓글을 달 수 있습니다.'}
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
-                readOnly={!user?.isLogin}
+                readOnly={!isLoggedIn}
               />
               <div className="flex justify-end mt-2">
                 <button
                   type="button"
                   onClick={handleSubmitComment}
-                  disabled={commentSubmitting || !user?.isLogin}
+                  disabled={commentSubmitting || !isLoggedIn}
                   className="px-6 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-normal transition-colors disabled:opacity-60"
                 >
                   {commentSubmitting ? '등록 중...' : '등록'}
@@ -533,7 +542,7 @@ const BoardView = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-base font-semibold">{comment.author}</p>
-                        {user && String(comment.memberId) === String(userIdForApi) && (
+                        {userIdForApi && String(comment.memberId) === String(userIdForApi) && (
                           <button
                             onClick={() => {
                               setSelectedCommentId(comment.id);

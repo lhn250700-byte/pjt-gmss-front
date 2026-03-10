@@ -178,6 +178,16 @@ const BoardList = () => {
     return result;
   }, [activeTab, mbtiFilter, searchField, searchQuery, posts, popularPosts]);
 
+  // 탭별 게시판 제목 (인기글 제외, DB 연동 목록용)
+  const boardTitleByTab = {
+    전체: '전체 게시판',
+    자유: '자유 게시판',
+    MBTI: 'MBTI 게시판',
+    공지: '공지 게시판',
+    인기글: '인기글',
+  };
+  const currentBoardTitle = boardTitleByTab[activeTab] ?? '전체 게시판';
+
   const totalPagesForPaging =
     activeTab === '인기글' ? Math.max(1, Math.ceil(popularPosts.length / pageSize)) : totalPages;
   const safePage = Math.min(page, totalPagesForPaging);
@@ -288,9 +298,9 @@ const BoardList = () => {
             </button>
           </div>
 
-          {/* Mobile 헤더 */}
+          {/* Mobile 헤더 - 탭에 따라 제목 변경 (DB 연동 목록) */}
           <div className="flex flex-col items-start gap-1 mb-3">
-            <h2 className="text-sm font-semibold text-gray-800">BEST 인기글 (실시간)</h2>
+            <h2 className="text-sm font-semibold text-gray-800">{currentBoardTitle}</h2>
             <Link
               to="/board/write"
               className="px-2 py-0.5 rounded-md border border-blue-600 text-blue-600 text-xs self-end"
@@ -536,9 +546,9 @@ const BoardList = () => {
             </div>
           </div>
 
-          {/* PC 헤더 */}
+          {/* PC 헤더 - 탭에 따라 제목 변경 (DB 연동 목록) */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[16px] font-medium text-gray-800">BEST인기글(실시간)</h2>
+            <h2 className="text-[16px] font-medium text-gray-800">{currentBoardTitle}</h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
