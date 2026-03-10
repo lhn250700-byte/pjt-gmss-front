@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MBTI_OPTIONS, toShortDate } from './boardData';
 import { bbsApi } from '../../../api/backendApi';
 
@@ -93,6 +93,7 @@ const BoardList = () => {
       .then((res) => {
         if (cancelled) return;
         const list = (res.content || []).map(mapBbsToPost);
+        console.log('test', list);
         setPosts(list);
         const total = Math.max(1, res.totalPages ?? 1);
         setTotalPages(total);
@@ -514,7 +515,16 @@ const BoardList = () => {
             <div className="flex-[1] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
                 <h2 className="text-[16px] font-medium text-gray-800">공지사항</h2>
-                <button className="flex items-center gap-1 text-xs text-[#2f80ed] hover:underline font-normal">
+                <button
+                  className="flex items-center gap-1 text-xs text-[#2f80ed] hover:underline font-normal"
+                  onClick={() => {
+                    setActiveTab('공지');
+                    setPage(1);
+                    setMbtiFilter('MBTI');
+                    setSearchInput('');
+                    setSearchQuery('');
+                  }}
+                >
                   더보기
                   <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
