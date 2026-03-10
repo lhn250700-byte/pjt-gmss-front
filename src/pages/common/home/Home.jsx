@@ -66,7 +66,7 @@ const Home = () => {
 
     const fetchWeeklyKeywords = async () => {
       const data = await getWeeklyKeywords();
-      setKeywordCloud(data?.keywords);
+      setKeywordCloud(data?.keywords || []);
     };
 
     fetchPopularPosts();

@@ -64,6 +64,11 @@ export const bbsApi = {
     return request('POST', `/api/bbs/${bbsId}/comments`, { body, userId });
   },
 
+  /** 댓글 좋아요(true) / 싫어요(false) */
+  toggleCommentLike(cmtId, body, userId) {
+    return request('POST', `/api/bbs/comments/${cmtId}/like`, { body, userId });
+  },
+
   deleteComment(cmtId, userId) {
     return request('DELETE', `/api/bbs/comments/${cmtId}`, { userId });
   },

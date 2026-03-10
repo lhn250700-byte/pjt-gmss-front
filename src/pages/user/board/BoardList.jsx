@@ -196,8 +196,9 @@ const BoardList = () => {
       const start = (safePage - 1) * pageSize;
       return popularPosts.slice(start, start + pageSize);
     }
-    const start = (safePage - 1) * pageSize;
-    return filteredItems.slice(start, start + pageSize);
+    // 서버 페이징: bbsApi.getList({ page, limit })가 이미 해당 페이지 10건만 반환함.
+    // 여기서 다시 slice((page-1)*10, ...) 하면 2페이지부터 빈 목록이 됨 → 그대로 표시
+    return filteredItems;
   }, [activeTab, filteredItems, popularPosts, safePage]);
 
   return (
