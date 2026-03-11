@@ -322,7 +322,7 @@ const Home = () => {
 
         {/* DESKTOP */}
         <div className="hidden lg:block w-full bg-[#f3f7ff] min-h-screen">
-          <div className="max-w-[1520px] mx-auto px-6 py-8">
+          <div className="max-w-[1520px] mx-auto px-6 pb-8">
             {/* HERO */}
             <section
               className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen h-[380px] text-white p-8 flex items-center justify-center text-center shadow-[0_8px_24px_rgba(0,0,0,0.12)] bg-cover bg-center mb-8"

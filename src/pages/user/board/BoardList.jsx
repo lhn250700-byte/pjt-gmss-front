@@ -635,8 +635,8 @@ const BoardList = () => {
                         {String(idx + 1).padStart(2, '0')}
                       </span>
 
-                      <h3 className="flex-1 min-w-0 truncate text-[13px] leading-[1.4] font-normal text-gray-800">
-                        {post.title} [{post.comments}]
+                      <h3 className="flex-1 min-w-0 truncate text-lg! leading-[1.4] font-normal text-gray-800">
+                        {post.title}
                       </h3>
 
                       <span className="flex-shrink-0 text-[12px] text-gray-500">
@@ -687,7 +687,7 @@ const BoardList = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowMbtiDropdown(!showMbtiDropdown)}
-                  className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1 ${
+                  className={`w-[100px] px-4 py-[4.2px] rounded-lg text-[13px] font-medium flex items-center justify-center gap-1 ${
                     activeTab === 'MBTI'
                       ? 'bg-[#2f80ed] text-white'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -819,7 +819,6 @@ const BoardList = () => {
                     let postNumber = (safePage - 1) * pageSize + 1;
                     return pagedItems.map((item) => {
                       const currentNumber = item.isNotice ? null : postNumber++;
-                      console.log(item);
                       return (
                         <tr
                           key={item.id}
