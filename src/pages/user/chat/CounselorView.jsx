@@ -27,6 +27,8 @@ const TIME_SLOTS = [
 
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
+const logo = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png";
+
 const formatDate = (year, month, day) => {
   const mm = String(month + 1).padStart(2, '0');
   const dd = String(day).padStart(2, '0');
@@ -1290,19 +1292,19 @@ const CounselorView = () => {
             <div className="bg-white rounded-2xl p-8 max-w-[600px] w-full">
               {/* 헤더 */}
               <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  예약 후 결제하기
-                </h2>
+                <h3 className="text-2xl font-bold text-gray-800">
+                결제하기
+                </h3>
                 <span className="text-lg font-semibold text-gray-600">
-                  {counselor?.nickname}
+                  <img src={logo} alt="로고" />
                 </span>
               </div>
 
               {/* 결제 확인 */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-3">
+                <h4 className="text-lg font-bold text-gray-800 mb-3">
                   결제확인
-                </h3>
+                </h4>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between text-base">
                     <span className="text-gray-600">상담사 :</span>
@@ -1327,9 +1329,9 @@ const CounselorView = () => {
 
               {/* 최종 결제 */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-3">
+                <h4 className="text-lg font-bold text-gray-800 mb-3">
                   최종 결제
-                </h3>
+                </h4>
                 <div className="bg-white border-2 border-gray-200 rounded-xl p-4 space-y-3">
                   <div className="flex justify-between text-base">
                     <span className="text-gray-600">보유 포인트</span>

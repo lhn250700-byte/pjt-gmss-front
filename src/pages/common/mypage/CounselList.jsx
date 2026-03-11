@@ -117,7 +117,7 @@ const CounselList = () => {
       <div className="hidden lg:block w-full min-h-screen bg-[#f3f7ff]">
         <div className="max-w-[1520px] mx-auto px-8 py-16">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-[32px] font-bold text-gray-900">상담 내역</h1>
+            <h3 className="!font-bold text-gray-900">상담 내역</h3>
             <button
               onClick={() => navigate('/mypage')}
               className="px-8 py-3 rounded-xl bg-[#2563eb] text-white font-medium hover:bg-[#1d4ed8] transition-colors"

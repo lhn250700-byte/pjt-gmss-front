@@ -142,10 +142,10 @@ const UserDefaultPage = () => {
         <div className="max-w-[1520px] mx-auto px-8 py-16">
           {/* HEADER */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-[30px] font-semibold text-gray-800">마이페이지</h1>
+            <h3 className="font-semibold text-gray-800">마이페이지</h3>
             <button
               onClick={handleLogout}
-              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-10 py-3 rounded-xl text-base font-normal transition-colors cursor-pointer"
+              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-10 py-3 rounded-xl text-[18px] font-normal transition-colors cursor-pointer"
             >
               로그아웃
             </button>
@@ -155,13 +155,13 @@ const UserDefaultPage = () => {
           <div className="mb-10">
             <div className="bg-[#3b82f6] rounded-3xl overflow-hidden shadow-xl">
               <div className="text-center py-12 px-10">
-                <p className="text-white text-2xl mb-4">{nickname ? `${nickname} 님의 잔액` : ''}</p>
-                <p className="text-white text-6xl font-bold">{userPoints.toLocaleString()} P</p>
+                <h4 className="text-white text-2xl mb-4">{nickname ? `${nickname} 님의 잔액` : ''}</h4>
+                <h4 className="text-white text-6xl font-bold">{userPoints.toLocaleString()} P</h4>
               </div>
               <div className="grid grid-cols-2 border-t border-white/20">
                 <button
                   onClick={() => navigate('/mypage/point-usage')}
-                  className="cursor-pointer bg-transparent text-white font-bold px-8 py-6 flex items-center justify-center gap-3 hover:bg-white/10 transition-colors text-xl border-r border-white/20"
+                  className="cursor-pointer bg-transparent text-white text-[24px] font-bold px-8 py-6 flex items-center justify-center gap-3 hover:bg-white/10 transition-colors text-xl border-r border-white/20"
                 >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -175,7 +175,7 @@ const UserDefaultPage = () => {
                 </button>
                 <button
                   onClick={() => navigate('/mypage/point-charge')}
-                  className="cursor-pointer bg-transparent text-white font-bold px-8 py-6 flex items-center justify-center gap-3 hover:bg-white/10 transition-colors text-xl"
+                  className="cursor-pointer bg-transparent text-white text-[24px] font-bold px-8 py-6 flex items-center justify-center gap-3 hover:bg-white/10 transition-colors text-xl"
                 >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -196,7 +196,7 @@ const UserDefaultPage = () => {
               <div className="w-24 h-24 rounded-full flex items-center justify-center">
                 <img src={modifyimg} alt="회원정보 수정" className="w-24 h-auto" />
               </div>
-              <span className="text-white font-bold text-2xl">회원정보 수정</span>
+              <h5 className="text-white font-bold">회원정보 수정</h5>
             </Link>
 
             {/* 상담 내역 */}
@@ -207,7 +207,7 @@ const UserDefaultPage = () => {
               <div className="w-24 h-24 rounded-full flex items-center justify-center">
                 <img src={cnslList} alt="상담 내역" className="w-24 h-auto" />
               </div>
-              <span className="text-white font-bold text-2xl">상담 내역</span>
+              <h5 className="text-white font-bold">상담 내역</h5>
             </Link>
 
             {/* 내 작성 글 */}
@@ -218,7 +218,7 @@ const UserDefaultPage = () => {
               <div className="w-24 h-24 rounded-full flex items-center justify-center">
                 <img src={bbsList} alt="내 작성 글" className="w-24 h-auto" />
               </div>
-              <span className="text-white font-bold text-2xl">내 작성 글</span>
+              <h5 className="text-white font-bold">내 작성 글</h5>
             </Link>
 
             {/* 내 작성 댓글 */}
@@ -229,7 +229,7 @@ const UserDefaultPage = () => {
               <div className="w-24 h-24 rounded-full flex items-center justify-center">
                 <img src={cmList} alt="내 작성 댓글" className="w-24 h-auto" />
               </div>
-              <span className="text-white font-bold text-2xl">내 작성 댓글</span>
+              <h5 className="text-white font-bold text-2xl">내 작성 댓글</h5>
             </Link>
           </div>
         </div>

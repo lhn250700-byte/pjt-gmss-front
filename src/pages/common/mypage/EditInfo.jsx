@@ -322,14 +322,13 @@ const EditInfo = () => {
       <div className="hidden lg:block w-full min-h-screen bg-[#f3f7ff]">
         <div className="max-w-[1520px] mx-auto px-8 py-16">
           {/* HEADER */}
-          <div className="flex items-center justify-between mb-8 ">
-            <h1 className="text-[30px] font-semibold text-gray-800">
+          <div className="flex-col items-center justify-between mb-8 ">
+            <h3 className="!font-bold text-gray-800 mb-8">
               회원정보 수정
-            </h1>
-          </div>
+            </h3>
 
           {/* CONTENT */}
-          <div className="w-[1520px] mx-auto bg-white rounded-2xl shadow-sm p-16">
+          <div className="w-full mx-auto bg-white rounded-2xl shadow-sm p-16">
             <div className="flex gap-16">
               {/* LEFT: 프로필 사진 */}
               <div className="flex flex-col items-center">
@@ -486,6 +485,7 @@ const EditInfo = () => {
               >
                 {loading ? '수정 중...' : '완 료'}
               </button>
+            </div>
             </div>
           </div>
         </div>

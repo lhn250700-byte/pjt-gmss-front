@@ -434,13 +434,13 @@ const BoardList = () => {
             {/* 커뮤니티 인기글 카드 - 공지사항과 동일 높이(418px), 안쪽 글자 크기는 아래 클래스만 바꿔서 조절 */}
             <div className="flex-[2] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 flex-shrink-0">
-                <h2 className="text-[16px] font-medium text-gray-800">커뮤니티 인기글</h2>
+                <h3 className="text-gray-800">커뮤니티 인기글</h3>
                 <div className="flex gap-2">
                   {['realtime', 'week', 'month', 'recommend', 'reply'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setPopularTab(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-normal transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-[20px] font-normal transition-colors ${
                         popularTab === tab ? 'bg-[#2f80ed] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -469,12 +469,12 @@ const BoardList = () => {
                           <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gray-600 tabular-nums leading-tight">
                             {String(idx + 1).padStart(2, '0')}
                           </span>
-                          <h3
-                            className="text-[5px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                          <h5
+                            className=" font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
                             title={post.title}
                           >
                             {post.title} [{post.comments}]
-                          </h3>
+                          </h5>
                           <span className="flex-shrink-0 text-[10px] font-normal text-gray-500 whitespace-nowrap leading-tight">
                             {toShortDate(post.createdAt)}
                           </span>
@@ -493,12 +493,12 @@ const BoardList = () => {
                           <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gray-600 tabular-nums leading-tight">
                             {String(idx + 6).padStart(2, '0')}
                           </span>
-                          <h3
-                            className="text-[11px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                          <h5
+                            className="text-gray-800 min-w-0 flex-1 truncate leading-tight"
                             title={post.title}
                           >
                             {post.title} [{post.comments}]
-                          </h3>
+                          </h5>
                           <span className="flex-shrink-0 text-[10px] font-normal text-gray-500 whitespace-nowrap leading-tight">
                             {toShortDate(post.createdAt)}
                           </span>
@@ -513,10 +513,10 @@ const BoardList = () => {
             {/* 공지사항 카드 */}
             <div className="flex-[1] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
-                <h2 className="text-[16px] font-medium text-gray-800">공지사항</h2>
-                <button className="flex items-center gap-1 text-xs text-[#2f80ed] hover:underline font-normal">
+                <h3 className="text-gray-800">공지사항</h3>
+                <button className="flex items-center gap-1 text-base text-[#2f80ed] hover:underline font-normal">
                   더보기
-                  <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -548,7 +548,7 @@ const BoardList = () => {
 
           {/* PC 헤더 - 탭에 따라 제목 변경 (DB 연동 목록) */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[16px] font-medium text-gray-800">{currentBoardTitle}</h2>
+            <h3 className="text-gray-800">{currentBoardTitle}</h3>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
@@ -556,7 +556,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '전체'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -570,7 +570,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '자유'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -583,14 +583,14 @@ const BoardList = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowMbtiDropdown(!showMbtiDropdown)}
-                  className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1 ${
+                  className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium flex items-center justify-center gap-1 ${
                     activeTab === 'MBTI'
                       ? 'bg-[#2f80ed] text-white'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
                   {mbtiFilter === 'MBTI' ? 'MBTI' : mbtiFilter}
-                  <span className="text-[10px]">{showMbtiDropdown ? '▲' : '▼'}</span>
+                  <span className="!text-sm ms-2">{showMbtiDropdown ? '▲' : '▼'}</span>
                 </button>
                 {showMbtiDropdown && (
                   <div className="absolute top-full mt-2 left-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 py-2 w-48 max-h-80 overflow-y-auto">
@@ -631,7 +631,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '인기글'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -645,7 +645,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '공지'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -655,7 +655,7 @@ const BoardList = () => {
               </button>
               <Link
                 to="/board/write"
-                className="w-[100px] px-4 py-2 rounded-lg bg-[#2f80ed] text-white text-[13px] font-medium hover:bg-[#2670d4] transition-colors ml-auto flex items-center justify-center"
+                className="w-[100px] px-4 py-2 rounded-lg bg-[#2f80ed] text-white !text-lg font-medium hover:bg-[#2670d4] transition-colors ml-auto flex items-center justify-center"
               >
                 글쓰기
               </Link>
@@ -667,12 +667,12 @@ const BoardList = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">게시판명</th>
-                  <th className="px-6 py-4 text-left text-[14px] font-normal text-gray-700">제 목</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">작성자</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">작성일</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-24">조회</th>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-24">추천</th>
+                  <th className="px-6 py-4 text-center text-base font-medium text-gray-700 w-32">게시판명</th>
+                  <th className="px-6 py-4 text-left text-base font-medium text-gray-700">제 목</th>
+                  <th className="px-6 py-4 text-center text-base font-medium text-gray-700 w-32">작성자</th>
+                  <th className="px-6 py-4 text-center text-base font-medium text-gray-700 w-32">작성일</th>
+                  <th className="px-6 py-4 text-center text-base font-medium text-gray-700 w-24">조회</th>
+                  <th className="px-6 py-4 text-center text-base font-medium text-gray-700 w-24">추천</th>
                 </tr>
               </thead>
               <tbody>
@@ -736,28 +736,28 @@ const BoardList = () => {
                             </Link>
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
                             {item.author}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-500'
                             }`}
                           >
                             {toShortDate(item.createdAt)}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
                             {item.views}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
