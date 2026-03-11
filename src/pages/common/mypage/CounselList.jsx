@@ -97,7 +97,7 @@ const CounselList = () => {
                 <div className="space-y-1 text-sm text-gray-600">
                   {/* DTO: getCnslStat() -> cnslStat */}
                   <p>
-                    상태 : <span className="text-[#2563eb] font-bold">{counsel.cnslStat}</span>
+                    상태 : <span className="text-[#2563eb] font-bold">{counsel.cnslStat?.split(' ')[0] || ''}</span>
                   </p>
                   {/* DTO: getNickname() -> nickname */}
                   <p>
@@ -176,7 +176,7 @@ const CounselList = () => {
                       <p>
                         상태 :{' '}
                         <span className="font-bold text-[#2563eb] px-3 py-1 bg-blue-50 rounded-full">
-                          {counsel.cnslStat}
+                          {counsel.cnslStat?.split(' ')[0] || ''}
                         </span>
                       </p>
                       <p>
