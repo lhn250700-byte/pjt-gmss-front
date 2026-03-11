@@ -21,8 +21,6 @@ const BoardView = () => {
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState('latest');
   const [commentInput, setCommentInput] = useState('');
-  const [replyToId, setReplyToId] = useState(null);
-  const [replyInput, setReplyInput] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [commentLikeSubmitting, setCommentLikeSubmitting] = useState(null);
   const [likeCount, setLikeCount] = useState(0);
@@ -45,7 +43,6 @@ const BoardView = () => {
       likeCount: c.likeCount ?? 0,
       dislikeCount: c.dislikeCount ?? 0,
       memberId: c.memberId?.memberId ?? c.member_id,
-      parentCmtId: c.parent_cmt_id ?? null,
     }),
     [postId],
   );
@@ -122,22 +119,6 @@ const BoardView = () => {
     return list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }, [comments, sort]);
 
-  const rootComments = useMemo(() => {
-    return sortedComments.filter((c) => !c.parentCmtId);
-  }, [sortedComments]);
-
-  const repliesByParent = useMemo(() => {
-    const m = new Map();
-    sortedComments.forEach((c) => {
-      if (c.parentCmtId) {
-        const arr = m.get(c.parentCmtId) || [];
-        arr.push(c);
-        m.set(c.parentCmtId, arr);
-      }
-    });
-    return m;
-  }, [sortedComments]);
-
   // Supabase 세션 또는 Spring 로그인(store) — Spring 로그인 시 user는 비어 있음
   const userIdForApi = user?.email ?? user?.id ?? storeEmail ?? null;
   const isLoggedIn = user?.isLogin === true || !!storeAccessToken;
@@ -157,25 +138,6 @@ const BoardView = () => {
         fetchComments();
       })
       .catch((e) => alert(e?.message || '댓글 작성 실패. 로그인 후 이용해 주세요.'))
-      .finally(() => setCommentSubmitting(false));
-  };
-
-  const handleSubmitReply = (parentId) => {
-    const text = replyInput.trim();
-    if (!text || !parentId) return;
-    if (!isLoggedIn || !userIdForApi) {
-      alert('로그인 후 답글을 작성할 수 있습니다.');
-      return;
-    }
-    setCommentSubmitting(true);
-    bbsApi
-      .addComment(postId, { content: text, parent_cmt_id: parentId }, userIdForApi)
-      .then(() => {
-        setReplyInput('');
-        setReplyToId(null);
-        fetchComments();
-      })
-      .catch((e) => alert(e?.message || '답글 작성 실패.'))
       .finally(() => setCommentSubmitting(false));
   };
 
@@ -397,9 +359,9 @@ const BoardView = () => {
             </button>
           </div>
 
-          {/* 댓글 목록 (루트 + 대댓글, 좋아요/싫어요 연동) */}
+          {/* 댓글 목록 (평면 리스트, 좋아요/싫어요 연동) */}
           <div className="mt-3 flex flex-col gap-3">
-            {rootComments.map((comment) => (
+            {sortedComments.map((comment) => (
               <div key={comment.id} className="bg-white border border-gray-200 rounded-md p-3">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-full bg-gray-200 flex-shrink-0" />
@@ -438,61 +400,7 @@ const BoardView = () => {
                       >
                         👎 {comment.dislikeCount ?? 0}
                       </button>
-                      <button
-                        type="button"
-                        disabled={!isLoggedIn}
-                        onClick={() => {
-                          setReplyToId(replyToId === comment.id ? null : comment.id);
-                          setReplyInput('');
-                        }}
-                        className="text-[11px] px-2 py-0.5 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-                      >
-                        💬 답글
-                      </button>
                     </div>
-                    {replyToId === comment.id && (
-                      <div className="mt-2 flex gap-2">
-                        <input
-                          className="flex-1 text-xs border border-gray-200 rounded px-2 py-1"
-                          placeholder="답글 입력"
-                          value={replyInput}
-                          onChange={(e) => setReplyInput(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          disabled={commentSubmitting}
-                          onClick={() => handleSubmitReply(comment.id)}
-                          className="text-xs px-2 py-1 rounded bg-blue-600 text-white disabled:opacity-50"
-                        >
-                          등록
-                        </button>
-                      </div>
-                    )}
-                    {(repliesByParent.get(comment.id) || []).map((rep) => (
-                      <div key={rep.id} className="mt-2 ml-4 pl-3 border-l-2 border-gray-100">
-                        <p className="text-[11px] font-semibold">{rep.author}</p>
-                        <p className="text-[11px] text-gray-700 mt-0.5">{rep.content}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">{formatCommentDate(rep.createdAt)}</p>
-                        <div className="flex gap-2 mt-1">
-                          <button
-                            type="button"
-                            disabled={commentLikeSubmitting === rep.id || !isLoggedIn}
-                            onClick={() => handleCommentLike(rep.id, true)}
-                            className="text-[10px] disabled:opacity-50"
-                          >
-                            👍 {rep.likeCount ?? 0}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={commentLikeSubmitting === rep.id || !isLoggedIn}
-                            onClick={() => handleCommentLike(rep.id, false)}
-                            className="text-[10px] disabled:opacity-50"
-                          >
-                            👎 {rep.dislikeCount ?? 0}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -672,9 +580,9 @@ const BoardView = () => {
               </button>
             </div>
 
-            {/* 댓글 목록 (루트 + 대댓글, 좋아요/싫어요 연동) */}
+            {/* 댓글 목록 (평면 리스트, 좋아요/싫어요 연동) */}
             <div className="flex flex-col gap-4">
-              {rootComments.map((comment) => (
+              {sortedComments.map((comment) => (
                 <div key={comment.id} className="bg-gray-50 border border-gray-200 rounded-lg p-5">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0" />
@@ -713,61 +621,7 @@ const BoardView = () => {
                         >
                           👎 싫어요 {comment.dislikeCount ?? 0}
                         </button>
-                        <button
-                          type="button"
-                          disabled={!isLoggedIn}
-                          onClick={() => {
-                            setReplyToId(replyToId === comment.id ? null : comment.id);
-                            setReplyInput('');
-                          }}
-                          className="text-sm px-3 py-1 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-                        >
-                          💬 답글
-                        </button>
                       </div>
-                      {replyToId === comment.id && (
-                        <div className="mt-3 flex gap-2">
-                          <input
-                            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2"
-                            placeholder="답글을 입력하세요"
-                            value={replyInput}
-                            onChange={(e) => setReplyInput(e.target.value)}
-                          />
-                          <button
-                            type="button"
-                            disabled={commentSubmitting}
-                            onClick={() => handleSubmitReply(comment.id)}
-                            className="px-4 py-2 rounded-lg bg-[#2f80ed] text-white text-sm disabled:opacity-50"
-                          >
-                            등록
-                          </button>
-                        </div>
-                      )}
-                      {(repliesByParent.get(comment.id) || []).map((rep) => (
-                        <div key={rep.id} className="mt-4 ml-6 pl-4 border-l-2 border-gray-200">
-                          <p className="text-sm font-semibold">{rep.author}</p>
-                          <p className="text-sm text-gray-700 mt-1">{rep.content}</p>
-                          <p className="text-xs text-gray-400 mt-2">{formatCommentDate(rep.createdAt)}</p>
-                          <div className="flex gap-3 mt-2">
-                            <button
-                              type="button"
-                              disabled={commentLikeSubmitting === rep.id || !isLoggedIn}
-                              onClick={() => handleCommentLike(rep.id, true)}
-                              className="text-xs disabled:opacity-50"
-                            >
-                              👍 {rep.likeCount ?? 0}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={commentLikeSubmitting === rep.id || !isLoggedIn}
-                              onClick={() => handleCommentLike(rep.id, false)}
-                              className="text-xs disabled:opacity-50"
-                            >
-                              👎 {rep.dislikeCount ?? 0}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
