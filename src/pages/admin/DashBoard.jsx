@@ -556,7 +556,7 @@ const DashBoard = () => {
                             {activity?.keyword || ''}
                           </td>
                           <td className="px-4 py-3 text-center text-xs font-semibold text-red-600">
-                            높음
+                            {activity?.riskLevel ?? '—'}
                           </td>
                           <td className="px-4 py-3 text-center text-xs font-semibold text-cyan-500">
                             {activity?.action}

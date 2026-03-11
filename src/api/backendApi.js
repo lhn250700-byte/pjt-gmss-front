@@ -5,6 +5,7 @@
  * - 백엔드 주소: .env에 VITE_BACKEND_URL 설정 (기본값 http://localhost:8080)
  */
 
+import { authApi } from '../axios/Auth.js';
 import axiosInstance, { BACKEND_BASE, getHeaders } from './axiosInstance.js';
 
 async function request(method, path, options = {}) {
@@ -104,16 +105,45 @@ export const risksApi = {
 
 // ========== 민감 키워드 (Keywords) ==========
 export const keywordsApi = {
-  getList() {
-    return request('GET', '/api/keywords');
+  async getList(userId) {
+    try {
+      const { data } = await authApi.get('/api/keywords', {
+        params: { userId },
+      });
+
+      return data;
+    } catch (error) {
+      console.error('getKeywords error:', error);
+      throw error;
+    }
   },
 
-  add(body) {
-    return request('POST', '/api/keywords', { body });
+  async add(body, userId) {
+    try {
+      const { data } = await authApi.post('/api/keywords', body, {
+        params: { userId },
+      });
+
+      return data;
+    } catch (error) {
+      console.error('addKeyword error:', error);
+      throw error;
+    }
   },
 
-  toggle(id, isActive) {
-    return request('PATCH', `/api/keywords/${id}/toggle`, { body: { is_active: isActive } });
+  async toggle(id, isActive, userId) {
+    try {
+      const { data } = await authApi.patch(
+        `/api/keywords/${id}/toggle`,
+        { is_active: isActive },
+        { params: { userId } },
+      );
+
+      return data;
+    } catch (error) {
+      console.error('toggleKeyword error:', error);
+      throw error;
+    }
   },
 };
 
