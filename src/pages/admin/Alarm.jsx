@@ -85,7 +85,16 @@ const Alarm = () => {
               : '-',
             counselorName: '-',
             keyword: r.detectedKeywords || '-',
-            riskLevel: '높음',
+            riskLevel: (() => {
+              const text = String(r.detectedKeywords || '');
+              const matches = [...text.matchAll(/심각도\s*[:：]\s*(\d)/g)];
+              const nums = matches.map((m) => Number(m[1])).filter((n) => Number.isFinite(n));
+              const max = nums.length ? Math.max(...nums) : 0;
+              if (max >= 4) return '높음';
+              if (max === 3) return '중간';
+              if (max >= 1) return '낮음';
+              return '—';
+            })(),
             status: r.action || '진행 중',
             statusColor:
               r.action === '완료'

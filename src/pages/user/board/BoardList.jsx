@@ -196,8 +196,9 @@ const BoardList = () => {
       const start = (safePage - 1) * pageSize;
       return popularPosts.slice(start, start + pageSize);
     }
-    const start = (safePage - 1) * pageSize;
-    return filteredItems.slice(start, start + pageSize);
+    // 서버 페이징: bbsApi.getList({ page, limit })가 이미 해당 페이지 10건만 반환함.
+    // 여기서 다시 slice((page-1)*10, ...) 하면 2페이지부터 빈 목록이 됨 → 그대로 표시
+    return filteredItems;
   }, [activeTab, filteredItems, popularPosts, safePage]);
 
   return (
@@ -513,14 +514,15 @@ const BoardList = () => {
             {/* 공지사항 카드 */}
             <div className="flex-[1] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
-                <h2 className="text-[16px] font-medium text-gray-800">공지사항</h2>
-                <button className="flex items-center gap-1 text-xs text-[#2f80ed] hover:underline font-normal">
+                <h2 className="text-[18px] font-semibold text-gray-800">공지사항</h2>
+                <button className="flex items-center gap-1 text-[13px] text-[#2f80ed] hover:underline font-normal">
                   더보기
-                  <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
+
               <div className="flex-1 bg-white">
                 {posts
                   .filter((p) => p.isNotice)
@@ -529,17 +531,17 @@ const BoardList = () => {
                     <Link
                       key={post.id}
                       to={`/board/view/${post.id}`}
-                      className="flex items-center gap-2 px-4 py-[7px] hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      className="flex items-center gap-3 px-4 h-[56px] hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
-                      <span className="flex-shrink-0 w-7 text-right text-[12px] font-semibold text-gray-600 tabular-nums">
+                      <span className="flex-shrink-0 w-8 text-right text-[13px] font-semibold text-gray-600 tabular-nums">
                         {String(idx + 1).padStart(2, '0')}
                       </span>
-                      <h3 className="text-[9px] font-normal text-gray-800 truncate min-w-0 flex-1">
+
+                      <h3 className="flex-1 min-w-0 truncate text-[13px] leading-[1.4] font-normal text-gray-800">
                         {post.title} [{post.comments}]
                       </h3>
-                      <span className="flex-shrink-0 text-[11px] font-normal text-gray-500">
-                        {toShortDate(post.createdAt)}
-                      </span>
+
+                      <span className="flex-shrink-0 text-[12px] text-gray-500">{toShortDate(post.createdAt)}</span>
                     </Link>
                   ))}
               </div>
