@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
 import { useAuthStore } from '../../../store/auth.store';
-import { signOut } from '../../../axios/Auth';
+import { signOut, deleteMember } from '../../../axios/Auth';
 import { getMyPoint } from '../../../api/walletApi';
 
 const UserDefaultPage = () => {
@@ -20,6 +20,12 @@ const UserDefaultPage = () => {
 
   const handleLogout = async () => {
     await signOut();
+    navigate('/');
+  };
+
+  const handleDeleteMember = async () => {
+    alert('회원 탈퇴를 하시겠습니까?');
+    await deleteMember();
     navigate('/');
   };
 
@@ -49,12 +55,20 @@ const UserDefaultPage = () => {
           {/* HEADER */}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-800">마이페이지</h1>
-            <button
-              onClick={handleLogout}
-              className="cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
-            >
-              로그아웃
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteMember}
+                className="cursor-pointer bg-[#ef4444] hover:bg-[#dc2626] text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
+              >
+                회원탈퇴
+              </button>
+              <button
+                onClick={handleLogout}
+                className="cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
           </div>
           {/* 포인트 정보 섹션 */}
           <div className="bg-[#3b82f6] rounded-2xl overflow-hidden mb-6 shadow-lg">
@@ -143,6 +157,12 @@ const UserDefaultPage = () => {
           {/* HEADER */}
           <div className="flex items-center justify-between mb-8">
             <h3 className="font-semibold text-gray-800">마이페이지</h3>
+            <button
+              onClick={handleDeleteMember}
+              className="bg-[#ef4444] hover:bg-[#dc2626] text-white px-10 py-3 rounded-xl text-[18px] font-normal transition-colors cursor-pointer"
+            >
+              로그아웃
+            </button>
             <button
               onClick={handleLogout}
               className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-10 py-3 rounded-xl text-[18px] font-normal transition-colors cursor-pointer"
