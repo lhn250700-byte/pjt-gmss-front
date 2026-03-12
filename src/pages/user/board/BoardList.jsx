@@ -660,7 +660,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '전체'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -674,7 +674,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '자유'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -739,7 +739,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '인기글'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -753,7 +753,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '공지'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -763,7 +763,7 @@ const BoardList = () => {
               </button>
               <Link
                 to="/board/write"
-                className="w-[100px] px-4 py-2 rounded-lg bg-[#2f80ed] text-white text-[13px] font-medium hover:bg-[#2670d4] transition-colors ml-auto flex items-center justify-center"
+                className="w-[100px] px-4 py-2 rounded-lg bg-[#2f80ed] text-white !text-lg font-medium hover:bg-[#2670d4] transition-colors ml-auto flex items-center justify-center"
               >
                 글쓰기
               </Link>
@@ -868,28 +868,28 @@ const BoardList = () => {
                             </Link>
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
                             {item.author}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-500'
                             }`}
                           >
                             {toShortDate(item.createdAt)}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
                             {item.views}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >

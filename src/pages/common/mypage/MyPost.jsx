@@ -242,13 +242,10 @@ const MyPost = () => {
       {/* PC VIEW */}
       <div className="hidden lg:block w-full min-h-screen bg-[#f3f7ff]">
         <div className="max-w-[1520px] mx-auto px-8 py-16">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-[30px] font-semibold text-gray-800">
-              내가 작성한 글
-            </h1>
-          </div>
+          <div className="flex-col items-center justify-between mb-8">
+            <h3 className="!font-bold text-gray-800 mb-6">내가 작성한 글</h3>
 
-          <div className="w-[1520px] mx-auto bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="w-full mx-auto bg-white rounded-2xl shadow-sm overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -359,6 +356,7 @@ const MyPost = () => {
             >
               검 색
             </button>
+          </div>
           </div>
         </div>
       </div>

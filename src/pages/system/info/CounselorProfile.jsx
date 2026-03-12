@@ -37,7 +37,7 @@ const CounselorProfile = () => {
   }, [accessToken]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#EAF1FF]">
       {/* 모바일 헤더 */}
       <div className="bg-blue-600 text-white p-4 flex items-center lg:hidden">
         <button onClick={() => navigate(-1)} className="mr-4">
@@ -65,7 +65,7 @@ const CounselorProfile = () => {
       </div>
 
       {/* 메인 컨텐츠 */}
-      <div className="bg-white">
+      <div className="bg-[#EAF1FF]">
         {/* 배너 이미지 */}
         <div className="relative">
           <img src={null} alt="배너" className="w-full h-48 object-cover" />
@@ -96,8 +96,8 @@ const CounselorProfile = () => {
         </div>
 
         {/* 심리상담사 소개 */}
-        <div className="px-4 py-8 border-t border-gray-200">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="flex m-auto w-[76%] px-4 py-8 border-t border-gray-200">
+          <div className="w-full bg-white rounded-xl shadow-sm p-6">
             {/* 제목 */}
             <h3 className="text-xl font-bold text-gray-800 mb-4">
               심리상담사 소개
@@ -114,7 +114,7 @@ const CounselorProfile = () => {
         </div>
 
         {/* 상담 리뷰 */}
-        <div className="px-4 py-6 border-t border-gray-200">
+        <div className="w-[76%] m-auto px-4 py-6 border-t border-gray-200">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold">상담 리뷰</h3>
             <button
@@ -125,11 +125,11 @@ const CounselorProfile = () => {
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 lg:flex lg:flex-row lg:gap-4 lg:overflow-x-auto lg:pb-2 lg:items-stretch">
             {counselorReviews.slice(0, 3).map((review) => (
               <div
                 key={review.id}
-                className="bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                className="bg-gray-50 lg:w-[35%] m-auto p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition"
                 onClick={() => handleReviewClick(review.id)}
               >
                 <div className="flex items-center justify-between mb-2">
