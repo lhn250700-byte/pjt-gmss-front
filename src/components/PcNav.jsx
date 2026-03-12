@@ -18,7 +18,7 @@ const PcNav = () => {
       return null;
     }
     MENUS.push(
-      { label: 'Home', to: '/' },
+      { label: 'HOME', to: '/' },
       { label: '상담', to: '/chat' },
       { label: '게시판', to: '/board' },
       { label: 'INFO', to: '/info' },

@@ -53,3 +53,16 @@ export const signOut = async () => {
     clearAuth();
   }
 };
+
+export const deleteMember = async () => {
+  const clearAuth = useAuthStore.getState().clearAuth;
+
+  try {
+    const { data } = await authApi.delete('/api/auth/delete');
+    return data;
+  } catch (error) {
+    console.error('회원탈퇴 요청 실패 : ', error);
+  } finally {
+    clearAuth();
+  }
+};
