@@ -15,18 +15,9 @@ import {
 import { useAuthStore } from '../../../store/auth.store';
 import { bbsApi } from './../../../api/backendApi';
 
-<<<<<<< HEAD
-const mobileLogo =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png';
-const nomal_cnsl =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png';
-const career_cnsl =
-  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/career_cnsl.png';
-=======
 const mobileLogo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo(m).png';
 const nomal_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/nomal_cnsl.png';
 const career_cnsl = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/career_cnsl.png';
->>>>>>> feature/mypage/yoonseop
 const employment_cnsl =
   'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/employment_cnsl.png';
 
@@ -62,9 +53,7 @@ const Home = () => {
             data = data.recommendations;
           } else {
             data = [];
-            setErrorMessage(
-              '해당 기능은 로그인 후 사용자 행동 패턴이 수집된 경우에만 이용할 수 있습니다.',
-            );
+            setErrorMessage('해당 기능은 로그인 후 사용자 행동 패턴이 수집된 경우에만 이용할 수 있습니다.');
           }
         }
         console.log('testset', data);
@@ -72,16 +61,10 @@ const Home = () => {
       } catch (error) {
         setCommunityTopPosts([]);
         if (error.response) {
-          setErrorMessage(
-            error.response.data?.detail || '서버 오류가 발생했습니다.',
-          );
+          setErrorMessage(error.response.data?.detail || '서버 오류가 발생했습니다.');
         } else if (error.request) {
           setErrorMessage('서버 응답이 없습니다. 네트워크를 확인해 주세요.');
-        } else
-          setErrorMessage(
-            error.message ||
-              '알 수 없는 에러가 발생했습니다. 새로고침을 해 주세요.',
-          );
+        } else setErrorMessage(error.message || '알 수 없는 에러가 발생했습니다. 새로고침을 해 주세요.');
       }
     };
 
@@ -116,10 +99,8 @@ const Home = () => {
           content.map((row) => ({
             id: row.bbsId,
             title: row.title ?? '',
-            author:
-              row.memberId?.nickname ?? row.memberId?.memberId ?? '관리자',
-            createdAt:
-              row.created_at ?? row.createdAt ?? new Date().toISOString(),
+            author: row.memberId?.nickname ?? row.memberId?.memberId ?? '관리자',
+            createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
           })),
         );
       })
@@ -283,26 +264,16 @@ const Home = () => {
               {communityTopPosts?.length > 0 ? (
                 <ol className="list-none p-0 m-0 flex flex-col gap-2">
                   {communityTopPosts?.map((p, index) => (
-                    <li
-                      key={p.bbsId || p.bbs_id}
-                      className="flex items-center gap-2.5 text-[13px] text-[#1f2937]"
-                    >
-                      <span className="font-bold text-[#4b5563] w-[26px]">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <Link
-                        to={`/board/view/${p.bbsId || p.bbs_id}`}
-                        className="truncate"
-                      >
+                    <li key={p.bbsId || p.bbs_id} className="flex items-center gap-2.5 text-[13px] text-[#1f2937]">
+                      <span className="font-bold text-[#4b5563] w-[26px]">{String(index + 1).padStart(2, '0')}</span>
+                      <Link to={`/board/view/${p.bbsId || p.bbs_id}`} className="truncate">
                         {p.title}
                       </Link>
                     </li>
                   ))}
                 </ol>
               ) : (
-                <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">
-                  {errorMessage}
-                </div>
+                <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">{errorMessage}</div>
               )}
             </section>
           </main>
@@ -373,13 +344,7 @@ const Home = () => {
                 {/* 고민 상담 → AI 상담 */}
                 <button
                   type="button"
-                  onClick={() =>
-                    navigate(
-                      activeCnslId
-                        ? `/chat/withai/${activeCnslId}`
-                        : '/chat/withai',
-                    )
-                  }
+                  onClick={() => navigate(activeCnslId ? `/chat/withai/${activeCnslId}` : '/chat/withai')}
                   className="bg-gradient-to-br from-[#2ed3c6] to-[#26b8ad] rounded-[20px] p-8 text-white shadow-[0_8px_24px_rgba(46,211,198,0.25)] hover:shadow-[0_12px_32px_rgba(46,211,198,0.35)] hover:scale-[1.02] transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[200px] border-0 cursor-pointer"
                 >
                   <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center text-[52px] mb-4">
@@ -432,10 +397,7 @@ const Home = () => {
               <h3 className="text-[#111827] mb-4">이번 주 키워드</h3>
               <div className="grid grid-cols-2 gap-5">
                 <div className="relative bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] overflow-hidden p-6 h-full min-h-[320px] flex items-center justify-center">
-                  <img
-                    src="http://localhost:8000/weekly-wordcloud"
-                    className=""
-                  />
+                  <img src="http://localhost:8000/weekly-wordcloud" className="" />
                 </div>
                 <div className="bg-white rounded-[20px] shadow-[0_4px_16px_rgba(31,41,55,0.06)] p-5">
                   <div className="flex items-center justify-between mb-4">
@@ -552,10 +514,7 @@ const Home = () => {
                   <ol className="list-none p-0 m-0 flex flex-col gap-2.5">
                     {communityTopPosts?.map((p, index) => {
                       return (
-                        <li
-                          key={p.bbsId || p.bbs_id}
-                          className="flex items-center gap-3 text-[13px] text-[#1f2937]"
-                        >
+                        <li key={p.bbsId || p.bbs_id} className="flex items-center gap-3 text-[13px] text-[#1f2937]">
                           <span className="font-bold text-[#4b5563] w-[28px] text-center">
                             {String(index + 1).padStart(2, '0')}
                           </span>
@@ -565,17 +524,13 @@ const Home = () => {
                           >
                             {p.title}
                           </Link>
-                          <span className="text-[11px] text-[#6b7280]">
-                            👍 {p.bbsLikeCount || p.likeCnt || 0}
-                          </span>
+                          <span className="text-[11px] text-[#6b7280]">👍 {p.bbsLikeCount || p.likeCnt || 0}</span>
                         </li>
                       );
                     })}
                   </ol>
                 ) : (
-                  <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">
-                    {errorMessage}
-                  </div>
+                  <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">{errorMessage}</div>
                 )}
               </div>
             </section>
