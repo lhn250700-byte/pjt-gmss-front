@@ -5,7 +5,6 @@
  * - 백엔드 주소: .env에 VITE_BACKEND_URL 설정 (기본값 http://localhost:8080)
  */
 
-import { authApi } from '../axios/Auth.js';
 import axiosInstance, { BACKEND_BASE, getHeaders } from './axiosInstance.js';
 
 async function request(method, path, options = {}) {
@@ -45,15 +44,30 @@ export const bbsApi = {
     return request('DELETE', `/api/bbs/${id}`, { userId });
   },
 
+  /** 응답이 배열이거나 { content / data / result / body } 형태일 때 배열 추출 */
+  _normalizePopularList(data) {
+    if (Array.isArray(data)) return data;
+    if (data == null || typeof data !== 'object') return [];
+    const arr =
+      data.content ?? data.data ?? data.result ?? data.body ?? data.list ?? [];
+    return Array.isArray(arr) ? arr : [];
+  },
+
   getPopularRealtime() {
     return request('GET', '/api/bbs_popularPostRealtimeList?period=realtime').then((data) =>
-      Array.isArray(data) ? data : [],
+      bbsApi._normalizePopularList(data),
     );
   },
 
   getPopularWeekly() {
     return request('GET', '/api/bbs_popularPostWeeklyList?period=week').then((data) =>
-      Array.isArray(data) ? data : [],
+      bbsApi._normalizePopularList(data),
+    );
+  },
+
+  getPopularMonthly() {
+    return request('GET', '/api/bbs_popularPostMonthlyList?period=month').then((data) =>
+      bbsApi._normalizePopularList(data),
     );
   },
 
@@ -90,6 +104,10 @@ export const risksApi = {
     return request('GET', `/api/risks?page=${page}&limit=${limit}`);
   },
 
+  getById(id) {
+    return request('GET', `/api/risks/${id}`);
+  },
+
   getRecent() {
     return request('GET', '/api/risks/recent');
   },
@@ -103,47 +121,18 @@ export const risksApi = {
   },
 };
 
-// ========== 민감 키워드 (Keywords) ==========
+// ========== 민감 키워드 (Keywords) - Spring 백엔드 ==========
 export const keywordsApi = {
-  async getList(userId) {
-    try {
-      const { data } = await authApi.get('/api/keywords', {
-        params: { userId },
-      });
-
-      return data;
-    } catch (error) {
-      console.error('getKeywords error:', error);
-      throw error;
-    }
+  getList() {
+    return request('GET', '/api/keywords').then((data) => (Array.isArray(data) ? data : []));
   },
 
-  async add(body, userId) {
-    try {
-      const { data } = await authApi.post('/api/keywords', body, {
-        params: { userId },
-      });
-
-      return data;
-    } catch (error) {
-      console.error('addKeyword error:', error);
-      throw error;
-    }
+  add(body) {
+    return request('POST', '/api/keywords', { body }).then((res) => res?.data ?? res);
   },
 
-  async toggle(id, isActive, userId) {
-    try {
-      const { data } = await authApi.patch(
-        `/api/keywords/${id}/toggle`,
-        { is_active: isActive },
-        { params: { userId } },
-      );
-
-      return data;
-    } catch (error) {
-      console.error('toggleKeyword error:', error);
-      throw error;
-    }
+  toggle(id, isActive) {
+    return request('PATCH', `/api/keywords/${id}/toggle`, { body: { is_active: isActive } });
   },
 };
 

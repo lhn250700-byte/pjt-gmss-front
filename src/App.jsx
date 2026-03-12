@@ -34,6 +34,7 @@ import EditCounselorAbout from './pages/system/info/EditCounselorAbout';
 import CounselorClientChat from './pages/system/info/CounselorClientChat';
 import ScheduleManagement from './pages/system/info/ScheduleManagement';
 import RiskCaseList from './pages/system/info/RiskCaseList';
+import RiskCaseDetail from './pages/system/info/RiskCaseDetail';
 import { refreshAccessToken } from './axios/Auth';
 import { useAuthStore } from './store/auth.store';
 
@@ -126,6 +127,15 @@ const App = () => {
           element={
             <ProtectedRoute allowRoles={['SYSTEM']}>
               <RiskCaseList />
+            </ProtectedRoute>
+          }
+        />
+        {/* RISK CASE DETAIL - 상담사 게시글 보기 및 댓글 */}
+        <Route
+          path="/system/info/risk-case/:riskId"
+          element={
+            <ProtectedRoute allowRoles={['SYSTEM']}>
+              <RiskCaseDetail />
             </ProtectedRoute>
           }
         />

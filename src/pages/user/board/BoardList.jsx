@@ -11,19 +11,25 @@ const popularCache = { key: null, data: [], ts: 0 };
 const LIST_CACHE_TTL_MS = 60 * 1000;
 const listCache = { key: null, data: { content: [], totalPages: 1 }, ts: 0 };
 
+/** 백엔드 인기글 API 응답(camelCase/snake_case) → 목록용 포스트 형태 */
 function mapPopularToPost(p) {
+  if (p == null || typeof p !== 'object') return null;
+  const id = p.bbsId ?? p.bbs_id ?? p.id;
+  const title = p.title ?? '';
+  const createdAt = p.createdAt ?? p.created_at ?? null;
+  const bbsDiv = p.bbs_div ?? p.bbsDiv;
   return {
-    id: p.bbsId,
-    category: p.bbs_div === 'NOTI' ? '공지' : p.bbs_div === 'FREE' ? '자유' : 'MBTI',
-    isNotice: p.bbs_div === 'NOTI',
-    title: p.title,
+    id: id != null ? Number(id) : null,
+    category: bbsDiv === 'NOTI' ? '공지' : bbsDiv === 'FREE' ? '자유' : 'MBTI',
+    isNotice: bbsDiv === 'NOTI',
+    title: String(title),
     author: '-',
-    createdAt: p.createdAt,
-    views: p.views ?? 0,
-    likes: p.bbsLikeCount ?? 0,
-    comments: p.commentCount ?? 0,
-    mbti: p.mbti,
-    content: p.content,
+    createdAt,
+    views: Number(p.views) || 0,
+    likes: Number(p.bbsLikeCount ?? p.bbs_like_count) || 0,
+    comments: Number(p.commentCount ?? p.comment_count) || 0,
+    mbti: p.mbti ?? null,
+    content: p.content ?? '',
   };
 }
 
@@ -64,6 +70,7 @@ const BoardList = () => {
   const dropdownRef = useRef(null);
 
   const [posts, setPosts] = useState([]);
+  const [noticePosts, setNoticePosts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [popularPosts, setPopularPosts] = useState([]);
@@ -77,6 +84,26 @@ const BoardList = () => {
     return undefined;
   }, [activeTab]);
 
+  // 자유/MBTI 탭일 때만 공지 목록 별도 조회 (어느 게시판이든 상단에 공지 노출)
+  useEffect(() => {
+    if (bbsDivParam !== 'FREE' && bbsDivParam !== 'MBTI') {
+      setNoticePosts([]);
+      return;
+    }
+    let cancelled = false;
+    bbsApi
+      .getList({ page: 1, limit: 50, bbs_div: 'NOTI' })
+      .then((res) => {
+        if (!cancelled) setNoticePosts((res.content || []).map(mapBbsToPost));
+      })
+      .catch(() => {
+        if (!cancelled) setNoticePosts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bbsDivParam]);
+
   useEffect(() => {
     let cancelled = false;
     const cacheKey = `${page}-${bbsDivParam ?? 'all'}`;
@@ -88,16 +115,52 @@ const BoardList = () => {
       return;
     }
     setLoading(true);
+
+    if (bbsDivParam === 'FREE' || bbsDivParam === 'MBTI') {
+      bbsApi
+        .getList({ page, limit: pageSize, bbs_div: bbsDivParam })
+        .then((res) => {
+          if (cancelled) return;
+          const list = (res.content || []).map(mapBbsToPost);
+          setPosts(list);
+          const total = Math.max(1, res.totalPages ?? 1);
+          setTotalPages(total);
+          listCache.key = cacheKey;
+          listCache.data = { content: res.content || [], totalPages: total };
+          listCache.ts = Date.now();
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setPosts([]);
+          setTotalPages(1);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     bbsApi
       .getList({ page, limit: pageSize, bbs_div: bbsDivParam })
       .then((res) => {
         if (cancelled) return;
-        const list = (res.content || []).map(mapBbsToPost);
+        let raw = res.content || [];
+        if (!bbsDivParam) {
+          raw = [...raw].sort((a, b) => {
+            const aNoti = a.bbs_div === 'NOTI' ? 1 : 0;
+            const bNoti = b.bbs_div === 'NOTI' ? 1 : 0;
+            if (bNoti !== aNoti) return bNoti - aNoti;
+            return (b.bbsId ?? 0) - (a.bbsId ?? 0);
+          });
+        }
+        const list = raw.map(mapBbsToPost);
         setPosts(list);
         const total = Math.max(1, res.totalPages ?? 1);
         setTotalPages(total);
         listCache.key = cacheKey;
-        listCache.data = { content: res.content || [], totalPages: total };
+        listCache.data = { content: raw, totalPages: total };
         listCache.ts = Date.now();
       })
       .catch(() => {
@@ -113,7 +176,7 @@ const BoardList = () => {
     };
   }, [page, bbsDivParam]);
 
-  // 인기글 (실시간/주간) — 캐시 있으면 API 생략으로 즉시 표시
+  // 인기글 (실시간/주간/월간) — 캐시 있으면 API 생략
   useEffect(() => {
     let cancelled = false;
     const cacheKey = popularTab;
@@ -124,11 +187,17 @@ const BoardList = () => {
       return;
     }
     setPopularLoading(true);
-    const api = popularTab === 'week' ? bbsApi.getPopularWeekly : bbsApi.getPopularRealtime;
+    const api =
+      popularTab === 'week'
+        ? bbsApi.getPopularWeekly
+        : popularTab === 'month'
+          ? bbsApi.getPopularMonthly
+          : bbsApi.getPopularRealtime;
     api()
       .then((list) => {
         if (cancelled) return;
-        const mapped = Array.isArray(list) ? list.map(mapPopularToPost) : [];
+        const raw = Array.isArray(list) ? list : [];
+        const mapped = raw.map(mapPopularToPost).filter((item) => item != null && item.id != null);
         setPopularPosts(mapped);
         popularCache.key = cacheKey;
         popularCache.data = mapped;
@@ -156,11 +225,14 @@ const BoardList = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 클라이언트 필터: MBTI 세부, 검색 (목록이 전체가 아닐 때는 API에서 이미 분류됨)
+  // 클라이언트 필터: MBTI 세부, 검색. 자유/MBTI 탭은 공지(noticePosts)를 항상 상단에 두고 그 다음 게시글.
   const filteredItems = useMemo(() => {
-    let result = [...posts];
+    if (activeTab === '인기글') return popularPosts;
+    const boardList =
+      bbsDivParam === 'FREE' || bbsDivParam === 'MBTI' ? [...noticePosts, ...posts] : [...posts];
+    let result = boardList;
     if (activeTab === 'MBTI' && mbtiFilter && mbtiFilter !== 'MBTI') {
-      result = result.filter((p) => p.mbti === mbtiFilter);
+      result = result.filter((p) => p.isNotice || p.mbti === mbtiFilter);
     }
     const q = searchQuery.trim().toLowerCase();
     if (q) {
@@ -174,9 +246,8 @@ const BoardList = () => {
         return title.includes(q) || content.includes(q);
       });
     }
-    if (activeTab === '인기글') return popularPosts;
     return result;
-  }, [activeTab, mbtiFilter, searchField, searchQuery, posts, popularPosts]);
+  }, [activeTab, bbsDivParam, mbtiFilter, searchField, searchQuery, posts, noticePosts, popularPosts]);
 
   // 탭별 게시판 제목 (인기글 제외, DB 연동 목록용)
   const boardTitleByTab = {
@@ -191,6 +262,13 @@ const BoardList = () => {
   const totalPagesForPaging =
     activeTab === '인기글' ? Math.max(1, Math.ceil(popularPosts.length / pageSize)) : totalPages;
   const safePage = Math.min(page, totalPagesForPaging);
+
+  // PC 공지사항 카드용: 자유/MBTI일 땐 noticePosts, 그 외엔 posts 중 공지
+  const noticeListForCard = useMemo(() => {
+    if (bbsDivParam === 'FREE' || bbsDivParam === 'MBTI') return noticePosts;
+    return posts.filter((p) => p.isNotice);
+  }, [bbsDivParam, noticePosts, posts]);
+
   const pagedItems = useMemo(() => {
     if (activeTab === '인기글') {
       const start = (safePage - 1) * pageSize;
@@ -459,7 +537,7 @@ const BoardList = () => {
                   <div className="flex items-center justify-center flex-1 text-sm text-gray-500">로딩 중...</div>
                 ) : (
                   <div className="grid grid-cols-2 gap-x-10 gap-y-0 min-w-[580px] h-full flex-1 min-h-0">
-                    {/* 왼쪽 열 (1-5) - 카드 안에서 5행 균등 간격, 제목은 한 줄 말줄임 */}
+                    {/* 왼쪽 열 (1-5) */}
                     <div className="flex flex-col justify-between min-w-[260px] pr-4 h-full">
                       {popularPosts.slice(0, 5).map((post, idx) => (
                         <Link
@@ -471,7 +549,7 @@ const BoardList = () => {
                             {String(idx + 1).padStart(2, '0')}
                           </span>
                           <h3
-                            className="text-[5px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                            className="text-[11px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
                             title={post.title}
                           >
                             {post.title} [{post.comments}]
@@ -483,7 +561,7 @@ const BoardList = () => {
                       ))}
                     </div>
 
-                    {/* 오른쪽 열 (6-10) - 왼쪽과 동일 레이아웃·글자 크기 */}
+                    {/* 오른쪽 열 (6-10) */}
                     <div className="flex flex-col justify-between min-w-[260px] border-l border-gray-200 pl-6 h-full">
                       {popularPosts.slice(5, 10).map((post, idx) => (
                         <Link
@@ -524,26 +602,23 @@ const BoardList = () => {
               </div>
 
               <div className="flex-1 bg-white">
-                {posts
-                  .filter((p) => p.isNotice)
-                  .slice(0, 5)
-                  .map((post, idx) => (
-                    <Link
-                      key={post.id}
-                      to={`/board/view/${post.id}`}
-                      className="flex items-center gap-3 px-4 h-[56px] hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      <span className="flex-shrink-0 w-8 text-right text-[13px] font-semibold text-gray-600 tabular-nums">
-                        {String(idx + 1).padStart(2, '0')}
-                      </span>
+                {noticeListForCard.slice(0, 5).map((post, idx) => (
+                  <Link
+                    key={post.id}
+                    to={`/board/view/${post.id}`}
+                    className="flex items-center gap-3 px-4 h-[56px] hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                  >
+                    <span className="flex-shrink-0 w-8 text-right text-[13px] font-semibold text-gray-600 tabular-nums">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
 
-                      <h3 className="flex-1 min-w-0 truncate text-[13px] leading-[1.4] font-normal text-gray-800">
-                        {post.title} [{post.comments}]
-                      </h3>
+                    <h3 className="flex-1 min-w-0 truncate text-[13px] leading-[1.4] font-normal text-gray-800">
+                      {post.title} [{post.comments}]
+                    </h3>
 
-                      <span className="flex-shrink-0 text-[12px] text-gray-500">{toShortDate(post.createdAt)}</span>
-                    </Link>
-                  ))}
+                    <span className="flex-shrink-0 text-[12px] text-gray-500">{toShortDate(post.createdAt)}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
