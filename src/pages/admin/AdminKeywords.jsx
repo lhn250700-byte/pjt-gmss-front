@@ -12,6 +12,8 @@ const AdminKeywords = () => {
   const [submitting, setSubmitting] = useState(false);
   const [checkContent, setCheckContent] = useState('');
   const [checkResult, setCheckResult] = useState(null);
+  const [riskPage, setRiskPage] = useState(1);
+  const [riskList, setRiskList] = useState({ content: [], totalPages: 1, loading: false });
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +34,29 @@ const AdminKeywords = () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setRiskList((prev) => ({ ...prev, loading: true }));
+    risksApi
+      .getList({ page: riskPage, limit: 10 })
+      .then((res) => {
+        if (cancelled) return;
+        const content = res.content ?? [];
+        const total = res.totalElements ?? content.length;
+        const totalPages =
+          res.totalPages ?? Math.max(1, Math.ceil(total / 10));
+        setRiskList({
+          content,
+          totalPages,
+          loading: false,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setRiskList({ content: [], totalPages: 1, loading: false });
+      });
+    return () => { cancelled = true; };
+  }, [riskPage]);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -80,18 +105,13 @@ const AdminKeywords = () => {
           <ul className="space-y-1">
             <li>
               <Link
-                to="/admin/activities"
+                to="/alarm"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                활동 내역
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/admin/keywords"
-                className="flex items-center gap-4 px-6 py-4 rounded-lg bg-white/10 text-white"
-              >
-                민감 키워드
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className="text-lg">최신정보</span>
               </Link>
             </li>
             <li>
@@ -99,7 +119,32 @@ const AdminKeywords = () => {
                 to="/dashboard"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                대시보드
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+                </svg>
+                <span className="text-lg">대시보드</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/admin/keywords"
+                className="flex items-center gap-4 px-6 py-4 rounded-lg bg-white/10 text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span className="text-lg">민감키워드</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/stats"
+                className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span className="text-lg">통계자료</span>
               </Link>
             </li>
             <li>
@@ -107,7 +152,10 @@ const AdminKeywords = () => {
                 to="/admin"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                마이페이지
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-lg">마이페이지</span>
               </Link>
             </li>
           </ul>
@@ -176,43 +224,108 @@ const AdminKeywords = () => {
                 </form>
               </div>
 
-              {/* 내용 검사 */}
+              {/* 민감 키워드 감지된 게시글 목록 */}
               <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">내용 검사 (민감 키워드 탐지)</h2>
-                <form onSubmit={handleCheckContent} className="flex gap-4 mb-4">
-                  <textarea
-                    value={checkContent}
-                    onChange={(e) => setCheckContent(e.target.value)}
-                    className="flex-1 min-h-[80px] px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="검사할 텍스트를 입력하세요"
-                  />
-                  <button type="submit" className="h-10 px-6 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                    검사
-                  </button>
-                </form>
-                {checkResult && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    {checkResult.error ? (
-                      <p className="text-red-600">{checkResult.error}</p>
-                    ) : (
-                      <>
-                        <p className="font-medium">
-                          민감 키워드 포함: {checkResult.has_sensitive_keywords ? '예' : '아니오'}
-                        </p>
-                        <p className="text-sm text-gray-600">최대 위험도: {checkResult.max_severity}</p>
-                        {checkResult.detected_keywords?.length > 0 && (
-                          <ul className="mt-2 text-sm">
-                            {checkResult.detected_keywords.map((d, i) => (
-                              <li key={i}>
-                                {d.keyword} (severity: {d.severity})
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </>
-                    )}
-                  </div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">민감 키워드 감지된 게시글</h2>
+                <p className="text-sm text-gray-600 mb-6">게시판에 등록된 글 중 민감 키워드가 감지된 게시글 목록입니다.</p>
+                {riskList.loading ? (
+                  <div className="py-12 text-center text-gray-500">로딩 중...</div>
+                ) : riskList.content.length === 0 ? (
+                  <div className="py-12 text-center text-gray-500">감지된 게시글이 없습니다.</div>
+                ) : (
+                  <>
+                    <div className="space-y-4 mb-6">
+                      {riskList.content.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-5 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50/30 transition-colors"
+                        >
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-2">
+                            <span className="px-2 py-0.5 bg-gray-100 rounded">게시판: {item.bbsDiv ?? '—'}</span>
+                            <span>글번호: {item.bbsId}</span>
+                            {item.memberId && <span>작성자: {item.memberId}</span>}
+                            {item.createdAt && (
+                              <span>감지일시: {new Date(item.createdAt).toLocaleString('ko-KR')}</span>
+                            )}
+                          </div>
+                          <p className="text-gray-800 mb-2 line-clamp-3">{item.content || '(내용 없음)'}</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {item.detectedKeywords && (
+                              <span className="text-amber-700 font-medium">
+                                감지 키워드: {item.detectedKeywords}
+                              </span>
+                            )}
+                            {item.action && (
+                              <span className="text-sm text-gray-600">조치: {item.action}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRiskPage((p) => Math.max(1, p - 1))}
+                        disabled={riskPage === 1}
+                        className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40"
+                      >
+                        이전
+                      </button>
+                      <span className="px-4 text-sm text-gray-600">
+                        {riskPage} / {riskList.totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setRiskPage((p) => p + 1)}
+                        disabled={riskPage >= riskList.totalPages}
+                        className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40"
+                      >
+                        다음
+                      </button>
+                    </div>
+                  </>
                 )}
+
+                {/* 직접 텍스트 검사 (보조) */}
+                <details className="mt-8 pt-6 border-t border-gray-200">
+                  <summary className="cursor-pointer text-gray-600 hover:text-gray-800 font-medium">
+                    직접 텍스트 검사 (민감 키워드 포함 여부 / 위험도)
+                  </summary>
+                  <form onSubmit={handleCheckContent} className="flex gap-4 mt-4">
+                    <textarea
+                      value={checkContent}
+                      onChange={(e) => setCheckContent(e.target.value)}
+                      className="flex-1 min-h-[80px] px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="검사할 텍스트를 입력하세요"
+                    />
+                    <button type="submit" className="h-10 px-6 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                      검사
+                    </button>
+                  </form>
+                  {checkResult && (
+                    <div className="p-4 mt-4 bg-gray-50 rounded-lg">
+                      {checkResult.error ? (
+                        <p className="text-red-600">{checkResult.error}</p>
+                      ) : (
+                        <>
+                          <p className="font-medium">
+                            민감 키워드 포함: {checkResult.has_sensitive_keywords ? '예' : '아니오'}
+                          </p>
+                          <p className="text-sm text-gray-600">최대 위험도: {checkResult.max_severity}</p>
+                          {checkResult.detected_keywords?.length > 0 && (
+                            <ul className="mt-2 text-sm">
+                              {checkResult.detected_keywords.map((d, i) => (
+                                <li key={i}>
+                                  {d.keyword} (severity: {d.severity})
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </details>
               </div>
 
               {/* 키워드 목록 */}
