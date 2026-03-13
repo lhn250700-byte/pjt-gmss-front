@@ -674,7 +674,7 @@ const BoardList = () => {
                     <button
                       onClick={() => {
                         setMbtiFilter('MBTI');
-                        setActiveTab('전체');
+                        setActiveTab('MBTI');
                         setShowMbtiDropdown(false);
                         setPage(1);
                       }}

@@ -132,7 +132,7 @@ const Admin = () => {
 
             {/* CARDS GRID */}
             <div className="grid grid-cols-2 gap-10 mx-auto" style={{ maxWidth: '900px' }}>
-              {/* 상담사 정보 수정 카드 */}
+              {/* 관리자 정보 수정 카드 */}
               <Link
                 to="/admin/edit"
                 className="group bg-[#2563eb] rounded-[2rem] shadow-2xl hover:shadow-3xl transition-all hover:scale-[1.02] flex flex-col items-center justify-center text-center"
@@ -154,7 +154,7 @@ const Admin = () => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-3xl font-bold text-white">상담사 정보 수정</h2>
+                <h2 className="text-3xl font-bold text-white">관리자 정보 수정</h2>
               </Link>
 
               {/* 최근 활동 내역 카드 */}
