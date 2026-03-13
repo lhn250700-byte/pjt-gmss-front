@@ -29,6 +29,9 @@ const ChatDefaultPage = () => {
   const [resetting, setResetting] = useState(false);
   const skipRedirectRef = useRef(Boolean(location.state?.fromBack || location.state?.fromNav));
 
+  const aicnslimg = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/aichat.png";
+  const cnslimg = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/m_cnsl.png";
+
   // 뒤로 가기 또는 Nav바 상담 클릭으로 온 경우 리다이렉트 하지 않음
   useEffect(() => {
     if (location.state?.fromBack || location.state?.fromNav) {
@@ -117,13 +120,13 @@ const ChatDefaultPage = () => {
       <div className="hidden lg:block w-full min-h-screen bg-[#f3f7ff]">
         <div className="max-w-[1520px] mx-auto px-8 py-16">
           {/* HEADER */}
-          <div className="flex items-center justify-center mb-16">
-            <h1 className="text-[48px] font-bold text-gray-800">채팅</h1>
+          <div className="flex items-center justify-center mb-8">
+            <h3 className="text-[48px] font-bold text-gray-800">채팅</h3>
           </div>
 
           {/* CONTENT */}
           <div className="mx-auto">
-            <h2 className="text-[36px] font-semibold text-gray-800 mb-12 text-center">누구와 상담을 하고 싶으세요?</h2>
+            <h4 className="text-[36px] font-semibold text-gray-800 mb-12 text-center">누구와 상담을 하고 싶으세요?</h4>
 
             <div className="grid grid-cols-2 gap-12 max-w-[1200px] mx-auto">
               {/* AI 상담하기 */}
@@ -132,11 +135,11 @@ const ChatDefaultPage = () => {
                 className="rounded-3xl bg-gradient-to-br from-[#2ed3c6] to-[#26b8ad] text-white p-16 min-h-[400px] flex flex-col items-center justify-center gap-8 shadow-[0_20px_40px_rgba(0,0,0,0.12)] hover:shadow-[0_24px_48px_rgba(0,0,0,0.16)] transition-all hover:scale-105"
               >
                 <div className="w-32 h-32 rounded-full border-4 border-white/70 flex items-center justify-center font-bold text-4xl bg-white/10 shadow-lg">
-                  AI
+                  <img src={aicnslimg} alt="AI 상담" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[32px] font-bold mb-3">AI와 상담하기</p>
-                  <p className="text-[20px] opacity-90">빠르게 상담 시작하세요</p>
+                  <h5 className="font-bold mb-5">AI와 상담하기</h5>
+                  <h6 className="opacity-90">빠르게 상담 시작하세요</h6>
                 </div>
               </Link>
 
@@ -146,11 +149,11 @@ const ChatDefaultPage = () => {
                 className="rounded-3xl bg-gradient-to-br from-[#2f80ed] to-[#2563eb] text-white p-16 min-h-[400px] flex flex-col items-center justify-center gap-8 shadow-[0_20px_40px_rgba(0,0,0,0.12)] hover:shadow-[0_24px_48px_rgba(0,0,0,0.16)] transition-all hover:scale-105"
               >
                 <div className="w-32 h-32 rounded-full border-4 border-white/70 flex items-center justify-center font-bold text-2xl bg-white/10 shadow-lg">
-                  상담
+                  <img src={cnslimg} alt="상담사 상담" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[32px] font-bold mb-3">상담사와 상담하기</p>
-                  <p className="text-[20px] opacity-90">전문 상담사를 찾아보세요</p>
+                  <h5 className="text-[32px] font-bold mb-5">상담사와 상담하기</h5>
+                  <h6 className="text-[20px] opacity-90">전문 상담사를 찾아보세요</h6>
                 </div>
               </Link>
             </div>

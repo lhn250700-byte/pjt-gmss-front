@@ -18,14 +18,7 @@ authApi.interceptors.request.use((config) => {
 });
 
 export const refreshAccessToken = async () => {
-  const {
-    setAccessToken,
-    setLoginStatus,
-    setEmail,
-    clearAuth,
-    setNickname,
-    setRoleName,
-  } = useAuthStore.getState();
+  const { setAccessToken, setLoginStatus, setEmail, clearAuth, setNickname, setRoleName } = useAuthStore.getState();
 
   try {
     const accessToken = useAuthStore.getState().accessToken;
@@ -42,12 +35,7 @@ export const refreshAccessToken = async () => {
     setNickname(data.nickname);
     setRoleName(data.roleNames[0]);
   } catch (error) {
-    // FastAPI(localhost:8000) 미실행 시 ERR_NETWORK 발생 가능 → 경고만 출력
-    if (error?.code === 'ERR_NETWORK') {
-      console.warn('토큰 갱신 스킵 (auth API 연결 불가. VITE_API_BASE_URL 서버가 꺼져 있으면 정상 동작입니다.)');
-    } else {
-      console.error('토큰 갱신 실패 : ', error);
-    }
+    console.error('토큰 갱신 실패 : ', error);
     clearAuth();
     return null;
   }
@@ -61,6 +49,19 @@ export const signOut = async () => {
     return data;
   } catch (error) {
     console.error('로그아웃 요청 실패 : ', error);
+  } finally {
+    clearAuth();
+  }
+};
+
+export const deleteMember = async () => {
+  const clearAuth = useAuthStore.getState().clearAuth;
+
+  try {
+    const { data } = await authApi.delete('/api/auth/delete');
+    return data;
+  } catch (error) {
+    console.error('회원탈퇴 요청 실패 : ', error);
   } finally {
     clearAuth();
   }

@@ -17,6 +17,8 @@ const SignIn = () => {
   const setRoleName = useAuthStore((state) => state.setRoleName);
   const setNickname = useAuthStore((state) => state.setNickname);
 
+  const f_logo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -83,10 +85,7 @@ const SignIn = () => {
               ←
             </Link>
             <div className="flex-1 flex items-center justify-center gap-2">
-              <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">★</span>
-              </div>
-              <div className="text-xl font-bold text-gray-800">고민순삭</div>
+              <img src={f_logo} alt="로고" />
             </div>
             <div className="w-8"></div>
           </header>
@@ -167,15 +166,10 @@ const SignIn = () => {
             </div>
           </form>
 
+{/* pc */}
           <div className="mt-8 lg:mt-10 flex items-center justify-center gap-2 text-xs lg:text-xs text-gray-600">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm lg:text-sm">★</span>
-              </div>
-              <div>
-                <div className="text-xs lg:text-xs text-gray-600">Healing Therapy</div>
-                <div className="font-semibold text-sm lg:text-sm text-gray-700">고민순삭</div>
-              </div>
+            <div className="flex w-32 h-auto items-center gap-2">
+              <img src={f_logo} alt="로고" />
             </div>
           </div>
         </div>

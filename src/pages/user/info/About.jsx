@@ -1,6 +1,11 @@
 import React from 'react';
 
 const About = () => {
+  const aboutimg1 = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/info1.png";
+  const aboutimg2 = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/info2.png";
+  const aboutimg3 = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/info3.png";
+  const f_logo = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png";
+
   return (
     <div className="bg-white lg:bg-transparent rounded-[14px] lg:rounded-none p-5 lg:p-0 shadow-[0_10px_20px_rgba(31,41,55,0.08)] lg:shadow-none">
       {/* Mobile 제목 */}
@@ -9,10 +14,7 @@ const About = () => {
       {/* 로고 영역 */}
       <div className="flex items-center justify-center bg-[#f3f7ff] rounded-[14px] lg:rounded-2xl py-6 lg:py-16 mb-5 lg:mb-12">
         <div className="text-center">
-          <div className="text-[12px] lg:text-base text-[#6b7280] font-semibold lg:font-normal mb-2 lg:mb-3">
-            Healing Therapy
-          </div>
-          <div className="text-[26px] lg:text-[60px] font-extrabold lg:font-bold text-[#111827]">고민순삭</div>
+          <img src={f_logo} alt="로고" />
         </div>
       </div>
 
@@ -25,7 +27,7 @@ const About = () => {
       <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6 lg:mb-16">
         <div className="bg-white border-2 border-[#2f80ed] rounded-2xl p-8 text-center">
           <div className="w-20 h-20 mx-auto mb-6 bg-[#f3f7ff] rounded-full flex items-center justify-center">
-            <span className="text-4xl">❓</span>
+            <img src={aboutimg1} alt="혼자 고민하면 '막막함'" className='w-14'/>
           </div>
           <h4 className="text-[24px] font-medium text-gray-800 mb-4">혼자 고민하면 '막막함'</h4>
           <p className="text-base font-normal text-gray-600 leading-relaxed">
@@ -38,7 +40,7 @@ const About = () => {
 
         <div className="bg-white border-2 border-[#2f80ed] rounded-2xl p-8 text-center">
           <div className="w-20 h-20 mx-auto mb-6 bg-[#f3f7ff] rounded-full flex items-center justify-center">
-            <span className="text-4xl">💬</span>
+            <img src={aboutimg2} alt="혼자가 아닌 위한 준비를 위해" className='w-14'/>
           </div>
           <h4 className="text-[24px] font-medium text-gray-800 mb-4">혼자가 아닌 위한 준비를 위해</h4>
           <p className="text-base font-normal text-gray-600 leading-relaxed">
@@ -51,7 +53,7 @@ const About = () => {
 
         <div className="bg-white border-2 border-[#2f80ed] rounded-2xl p-8 text-center">
           <div className="w-20 h-20 mx-auto mb-6 bg-[#f3f7ff] rounded-full flex items-center justify-center">
-            <span className="text-4xl">🌱</span>
+            <img src={aboutimg3} alt="고민순삭이 함께하는 이유" className='w-14'/>
           </div>
           <h4 className="text-[24px] font-medium text-gray-800 mb-4">고민순삭이 함께하는 이유</h4>
           <p className="text-base font-normal text-gray-600 leading-relaxed">

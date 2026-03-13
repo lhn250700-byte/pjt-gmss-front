@@ -44,7 +44,7 @@ const App = () => {
   useEffect(() => {
     if (!accessToken) refreshAccessToken().finally(() => setIsLoading(false));
     else setIsLoading(false);
-  }, []);
+  }, [accessToken]);
 
   if (isLoading) return <div>로딩 중 ...</div>;
 

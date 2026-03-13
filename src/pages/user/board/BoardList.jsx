@@ -1,7 +1,15 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MBTI_OPTIONS, toShortDate } from './boardData';
 import { bbsApi } from '../../../api/backendApi';
+import { useAuthStore } from '../../../store/auth.store';
+import {
+  getMonthlyPopularPosts,
+  getMonthlyPopularPosts_py,
+  getRealtimePopularPosts,
+  getRecommendedPosts,
+  getWeeklyPopularPosts,
+} from '../../../api/bbsApi';
 
 // 인기글 응답 캐시 (탭별 90초) — 재요청 감소로 체감 속도 개선
 const POPULAR_CACHE_TTL_MS = 90 * 1000;
@@ -58,6 +66,8 @@ const BoardList = () => {
   const initialActiveTab = location.state?.activeTab ?? '전체';
   const initialMbtiFilter = location.state?.mbtiFilter ?? 'MBTI';
 
+  const { accessToken, email } = useAuthStore();
+
   const [activeTab, setActiveTab] = useState(initialActiveTab);
   const [mbtiFilter, setMbtiFilter] = useState(initialMbtiFilter);
   const [page, setPage] = useState(1);
@@ -75,6 +85,7 @@ const BoardList = () => {
   const [loading, setLoading] = useState(true);
   const [popularPosts, setPopularPosts] = useState([]);
   const [popularLoading, setPopularLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // 백엔드 목록 조회 (탭에 따라 bbs_div 전달)
   const bbsDivParam = useMemo(() => {
@@ -176,43 +187,48 @@ const BoardList = () => {
     };
   }, [page, bbsDivParam]);
 
-  // 인기글 (실시간/주간/월간) — 캐시 있으면 API 생략
+  // 인기글 (실시간/주간) — 캐시 있으면 API 생략으로 즉시 표시
+  // setPopularPosts, setPopularLoading, popularTab
   useEffect(() => {
-    let cancelled = false;
-    const cacheKey = popularTab;
-    const hit = popularCache.key === cacheKey && Date.now() - popularCache.ts < POPULAR_CACHE_TTL_MS;
-    if (hit && popularCache.data.length >= 0) {
-      setPopularPosts(popularCache.data);
-      setPopularLoading(false);
-      return;
-    }
-    setPopularLoading(true);
-    const api =
-      popularTab === 'week'
-        ? bbsApi.getPopularWeekly
-        : popularTab === 'month'
-          ? bbsApi.getPopularMonthly
-          : bbsApi.getPopularRealtime;
-    api()
-      .then((list) => {
-        if (cancelled) return;
-        const raw = Array.isArray(list) ? list : [];
-        const mapped = raw.map(mapPopularToPost).filter((item) => item != null && item.id != null);
-        setPopularPosts(mapped);
-        popularCache.key = cacheKey;
-        popularCache.data = mapped;
-        popularCache.ts = Date.now();
-      })
-      .catch(() => {
-        if (!cancelled) setPopularPosts([]);
-      })
-      .finally(() => {
-        if (!cancelled) setPopularLoading(false);
-      });
-    return () => {
-      cancelled = true;
+    const fetchPopularPosts = async () => {
+      try {
+        let data = null; // 초기값을 null로 설정
+
+        if (popularTab === 'realtime') {
+          data = await getRealtimePopularPosts(popularTab);
+        } else if (popularTab === 'week') {
+          data = await getWeeklyPopularPosts(popularTab);
+        } else if (popularTab === 'month') {
+          if (accessToken) {
+            const res = await getMonthlyPopularPosts_py();
+            data = res?.posts;
+          } else {
+            data = await getMonthlyPopularPosts(popularTab);
+          }
+        } else if (popularTab === 'recommend') {
+          if (accessToken) {
+            data = await getRecommendedPosts(email);
+            data = data.recommendations;
+          } else {
+            data = [];
+            setErrorMessage('해당 기능은 로그인 후 사용자 행동 패턴이 수집된 경우에만 이용할 수 있습니다.');
+          }
+        }
+        setPopularLoading(true);
+        setPopularPosts(data || []);
+      } catch (error) {
+        setPopularPosts([]);
+        if (error.response) {
+          setErrorMessage(error.response.data?.detail || '서버 오류가 발생했습니다.');
+        } else if (error.request) {
+          setErrorMessage('서버 응답이 없습니다. 네트워크를 확인해 주세요.');
+        } else setErrorMessage(error.message || '알 수 없는 에러가 발생했습니다. 새로고침을 해 주세요.');
+      } finally {
+        setPopularLoading(false);
+      }
     };
-  }, [popularTab]);
+    fetchPopularPosts();
+  }, [popularTab, accessToken, email]);
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -228,8 +244,7 @@ const BoardList = () => {
   // 클라이언트 필터: MBTI 세부, 검색. 자유/MBTI 탭은 공지(noticePosts)를 항상 상단에 두고 그 다음 게시글.
   const filteredItems = useMemo(() => {
     if (activeTab === '인기글') return popularPosts;
-    const boardList =
-      bbsDivParam === 'FREE' || bbsDivParam === 'MBTI' ? [...noticePosts, ...posts] : [...posts];
+    const boardList = bbsDivParam === 'FREE' || bbsDivParam === 'MBTI' ? [...noticePosts, ...posts] : [...posts];
     let result = boardList;
     if (activeTab === 'MBTI' && mbtiFilter && mbtiFilter !== 'MBTI') {
       result = result.filter((p) => p.isNotice || p.mbti === mbtiFilter);
@@ -260,7 +275,7 @@ const BoardList = () => {
   const currentBoardTitle = boardTitleByTab[activeTab] ?? '전체 게시판';
 
   const totalPagesForPaging =
-    activeTab === '인기글' ? Math.max(1, Math.ceil(popularPosts.length / pageSize)) : totalPages;
+    activeTab === '인기글' ? Math.max(1, Math.ceil(popularPosts?.length / pageSize)) : totalPages;
   const safePage = Math.min(page, totalPagesForPaging);
 
   // PC 공지사항 카드용: 자유/MBTI일 땐 noticePosts, 그 외엔 posts 중 공지
@@ -272,7 +287,7 @@ const BoardList = () => {
   const pagedItems = useMemo(() => {
     if (activeTab === '인기글') {
       const start = (safePage - 1) * pageSize;
-      return popularPosts.slice(start, start + pageSize);
+      return popularPosts?.slice(start, start + pageSize);
     }
     // 서버 페이징: bbsApi.getList({ page, limit })가 이미 해당 페이지 10건만 반환함.
     // 여기서 다시 slice((page-1)*10, ...) 하면 2페이지부터 빈 목록이 됨 → 그대로 표시
@@ -519,7 +534,7 @@ const BoardList = () => {
                     <button
                       key={tab}
                       onClick={() => setPopularTab(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-normal transition-colors ${
+                      className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-normal transition-colors ${
                         popularTab === tab ? 'bg-[#2f80ed] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -535,27 +550,27 @@ const BoardList = () => {
               <div className="flex-1 min-h-0 flex flex-col bg-white p-4">
                 {popularLoading ? (
                   <div className="flex items-center justify-center flex-1 text-sm text-gray-500">로딩 중...</div>
-                ) : (
+                ) : popularPosts?.length > 0 ? (
                   <div className="grid grid-cols-2 gap-x-10 gap-y-0 min-w-[580px] h-full flex-1 min-h-0">
                     {/* 왼쪽 열 (1-5) */}
                     <div className="flex flex-col justify-between min-w-[260px] pr-4 h-full">
-                      {popularPosts.slice(0, 5).map((post, idx) => (
+                      {popularPosts?.slice(0, 5).map((post, idx) => (
                         <Link
-                          key={post.id}
-                          to={`/board/view/${post.id}`}
+                          key={post.bbsId || post.bbs_id}
+                          to={`/board/view/${post.bbsId || post.bbs_id}`}
                           className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 transition-colors flex-shrink-0 min-h-0 overflow-hidden"
                         >
                           <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gray-600 tabular-nums leading-tight">
                             {String(idx + 1).padStart(2, '0')}
                           </span>
                           <h3
-                            className="text-[11px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
-                            title={post.title}
+                            className="text-lg! font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                            title={post.title || ''}
                           >
-                            {post.title} [{post.comments}]
+                            {post.title || ''}
                           </h3>
                           <span className="flex-shrink-0 text-[10px] font-normal text-gray-500 whitespace-nowrap leading-tight">
-                            {toShortDate(post.createdAt)}
+                            👍 {post.bbsLikeCount || post.likeCnt || 0}
                           </span>
                         </Link>
                       ))}
@@ -563,28 +578,30 @@ const BoardList = () => {
 
                     {/* 오른쪽 열 (6-10) */}
                     <div className="flex flex-col justify-between min-w-[260px] border-l border-gray-200 pl-6 h-full">
-                      {popularPosts.slice(5, 10).map((post, idx) => (
+                      {popularPosts?.slice(5, 10).map((post, idx) => (
                         <Link
-                          key={post.id}
-                          to={`/board/view/${post.id}`}
+                          key={post.bbsId || post.bbs_id}
+                          to={`/board/view/${post.bbsId || post.bbs_id}`}
                           className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 transition-colors flex-shrink-0 min-h-0 overflow-hidden"
                         >
                           <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gray-600 tabular-nums leading-tight">
                             {String(idx + 6).padStart(2, '0')}
                           </span>
                           <h3
-                            className="text-[11px] font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
-                            title={post.title}
+                            className="text-lg! font-normal text-gray-800 min-w-0 flex-1 truncate leading-tight"
+                            title={post.title || ''}
                           >
-                            {post.title} [{post.comments}]
+                            {post.title || ''}
                           </h3>
                           <span className="flex-shrink-0 text-[10px] font-normal text-gray-500 whitespace-nowrap leading-tight">
-                            {toShortDate(post.createdAt)}
+                            👍 {post.bbsLikeCount || post.likeCnt || 0}
                           </span>
                         </Link>
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <div className="flex justify-center items-center h-64 text-[#6b7280] text-lg">{errorMessage}</div>
                 )}
               </div>
             </div>
@@ -593,7 +610,16 @@ const BoardList = () => {
             <div className="flex-[1] h-[418px] bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
               <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
                 <h2 className="text-[18px] font-semibold text-gray-800">공지사항</h2>
-                <button className="flex items-center gap-1 text-[13px] text-[#2f80ed] hover:underline font-normal">
+                <button
+                  className="flex items-center gap-1 text-[13px] text-[#2f80ed] hover:underline font-normal"
+                  onClick={() => {
+                    setActiveTab('공지');
+                    setPage(1);
+                    setMbtiFilter('MBTI');
+                    setSearchInput('');
+                    setSearchQuery('');
+                  }}
+                >
                   더보기
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -612,8 +638,8 @@ const BoardList = () => {
                       {String(idx + 1).padStart(2, '0')}
                     </span>
 
-                    <h3 className="flex-1 min-w-0 truncate text-[13px] leading-[1.4] font-normal text-gray-800">
-                      {post.title} [{post.comments}]
+                    <h3 className="flex-1 min-w-0 truncate text-lg! leading-[1.4] font-normal text-gray-800">
+                      {post.title}
                     </h3>
 
                     <span className="flex-shrink-0 text-[12px] text-gray-500">{toShortDate(post.createdAt)}</span>
@@ -633,7 +659,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '전체'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -647,7 +673,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '자유'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -660,7 +686,7 @@ const BoardList = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowMbtiDropdown(!showMbtiDropdown)}
-                  className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1 ${
+                  className={`w-[100px] px-4 py-[4.2px] rounded-lg text-[13px] font-medium flex items-center justify-center gap-1 ${
                     activeTab === 'MBTI'
                       ? 'bg-[#2f80ed] text-white'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -708,7 +734,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '인기글'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -722,7 +748,7 @@ const BoardList = () => {
                   setPage(1);
                   setMbtiFilter('MBTI');
                 }}
-                className={`w-[100px] px-4 py-2 rounded-lg text-[13px] font-medium ${
+                className={`w-[100px] px-4 py-2 rounded-lg text-lg font-medium ${
                   activeTab === '공지'
                     ? 'bg-[#2f80ed] text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -732,7 +758,7 @@ const BoardList = () => {
               </button>
               <Link
                 to="/board/write"
-                className="w-[100px] px-4 py-2 rounded-lg bg-[#2f80ed] text-white text-[13px] font-medium hover:bg-[#2670d4] transition-colors ml-auto flex items-center justify-center"
+                className="w-[100px] px-4 py-2 rounded-lg bg-[#2f80ed] text-white !text-lg font-medium hover:bg-[#2670d4] transition-colors ml-auto flex items-center justify-center"
               >
                 글쓰기
               </Link>
@@ -744,7 +770,7 @@ const BoardList = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">게시판명</th>
+                  <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">번호</th>
                   <th className="px-6 py-4 text-left text-[14px] font-normal text-gray-700">제 목</th>
                   <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">작성자</th>
                   <th className="px-6 py-4 text-center text-[14px] font-normal text-gray-700 w-32">작성일</th>
@@ -813,28 +839,28 @@ const BoardList = () => {
                             </Link>
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
                             {item.author}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-500'
                             }`}
                           >
                             {toShortDate(item.createdAt)}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
                             {item.views}
                           </td>
                           <td
-                            className={`px-6 py-4 text-[14px] font-normal text-center ${
+                            className={`px-6 py-4 text-[16px] font-normal text-center ${
                               item.isNotice ? 'text-white' : 'text-gray-600'
                             }`}
                           >
