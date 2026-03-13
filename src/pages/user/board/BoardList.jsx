@@ -95,12 +95,8 @@ const BoardList = () => {
     return undefined;
   }, [activeTab]);
 
-  // 자유/MBTI 탭일 때만 공지 목록 별도 조회 (어느 게시판이든 상단에 공지 노출)
+  // 공지 목록은 별도 조회해서 항상 상단 고정 노출
   useEffect(() => {
-    if (bbsDivParam !== 'FREE' && bbsDivParam !== 'MBTI') {
-      setNoticePosts([]);
-      return;
-    }
     let cancelled = false;
     bbsApi
       .getList({ page: 1, limit: 50, bbs_div: 'NOTI' })
@@ -113,7 +109,7 @@ const BoardList = () => {
     return () => {
       cancelled = true;
     };
-  }, [bbsDivParam]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -243,8 +239,15 @@ const BoardList = () => {
 
   // 클라이언트 필터: MBTI 세부, 검색. 자유/MBTI 탭은 공지(noticePosts)를 항상 상단에 두고 그 다음 게시글.
   const filteredItems = useMemo(() => {
-    if (activeTab === '인기글') return popularPosts;
-    const boardList = bbsDivParam === 'FREE' || bbsDivParam === 'MBTI' ? [...noticePosts, ...posts] : [...posts];
+    if (activeTab === '인기글') {
+      const popularList = (popularPosts || []).map(mapPopularToPost).filter(Boolean);
+      return [...noticePosts, ...popularList];
+    }
+
+    if (activeTab === '공지') return noticePosts.length > 0 ? noticePosts : posts;
+
+    const nonNoticePosts = (posts || []).filter((p) => !p.isNotice);
+    const boardList = [...noticePosts, ...nonNoticePosts];
     let result = boardList;
     if (activeTab === 'MBTI' && mbtiFilter && mbtiFilter !== 'MBTI') {
       result = result.filter((p) => p.isNotice || p.mbti === mbtiFilter);
@@ -275,24 +278,23 @@ const BoardList = () => {
   const currentBoardTitle = boardTitleByTab[activeTab] ?? '전체 게시판';
 
   const totalPagesForPaging =
-    activeTab === '인기글' ? Math.max(1, Math.ceil(popularPosts?.length / pageSize)) : totalPages;
+    activeTab === '인기글' ? Math.max(1, Math.ceil((filteredItems?.length || 0) / pageSize)) : totalPages;
   const safePage = Math.min(page, totalPagesForPaging);
 
   // PC 공지사항 카드용: 자유/MBTI일 땐 noticePosts, 그 외엔 posts 중 공지
   const noticeListForCard = useMemo(() => {
-    if (bbsDivParam === 'FREE' || bbsDivParam === 'MBTI') return noticePosts;
-    return posts.filter((p) => p.isNotice);
-  }, [bbsDivParam, noticePosts, posts]);
+    return noticePosts;
+  }, [noticePosts]);
 
   const pagedItems = useMemo(() => {
     if (activeTab === '인기글') {
       const start = (safePage - 1) * pageSize;
-      return popularPosts?.slice(start, start + pageSize);
+      return filteredItems?.slice(start, start + pageSize) || [];
     }
     // 서버 페이징: bbsApi.getList({ page, limit })가 이미 해당 페이지 10건만 반환함.
     // 여기서 다시 slice((page-1)*10, ...) 하면 2페이지부터 빈 목록이 됨 → 그대로 표시
     return filteredItems;
-  }, [activeTab, filteredItems, popularPosts, safePage]);
+  }, [activeTab, filteredItems, safePage]);
 
   return (
     <div className="w-full">
