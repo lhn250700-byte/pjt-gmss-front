@@ -238,7 +238,12 @@ const AdminKeywords = () => {
                       {riskList.content.map((item) => (
                         <div
                           key={item.id}
-                          className="p-5 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50/30 transition-colors"
+                          onClick={() => {
+                            if (item.bbsId != null) {
+                              navigate(`/board/view/${item.bbsId}`);
+                            }
+                          }}
+                          className="p-5 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50/30 transition-colors cursor-pointer"
                         >
                           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-2">
                             <span className="px-2 py-0.5 bg-gray-100 rounded">게시판: {item.bbsDiv ?? '—'}</span>
