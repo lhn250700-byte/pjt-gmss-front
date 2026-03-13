@@ -44,8 +44,7 @@ const AdminKeywords = () => {
         if (cancelled) return;
         const content = res.content ?? [];
         const total = res.totalElements ?? content.length;
-        const totalPages =
-          res.totalPages ?? Math.max(1, Math.ceil(total / 10));
+        const totalPages = res.totalPages ?? Math.max(1, Math.ceil(total / 10));
         setRiskList({
           content,
           totalPages,
@@ -55,7 +54,9 @@ const AdminKeywords = () => {
       .catch(() => {
         if (!cancelled) setRiskList({ content: [], totalPages: 1, loading: false });
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [riskPage]);
 
   const handleAdd = (e) => {
@@ -109,7 +110,12 @@ const AdminKeywords = () => {
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
                 </svg>
                 <span className="text-lg">최신정보</span>
               </Link>
@@ -120,7 +126,12 @@ const AdminKeywords = () => {
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z"
+                  />
                 </svg>
                 <span className="text-lg">대시보드</span>
               </Link>
@@ -131,7 +142,12 @@ const AdminKeywords = () => {
                 className="flex items-center gap-4 px-6 py-4 rounded-lg bg-white/10 text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
                 </svg>
                 <span className="text-lg">민감키워드</span>
               </Link>
@@ -142,7 +158,12 @@ const AdminKeywords = () => {
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
                 </svg>
                 <span className="text-lg">통계자료</span>
               </Link>
@@ -153,7 +174,12 @@ const AdminKeywords = () => {
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
                 <span className="text-lg">마이페이지</span>
               </Link>
@@ -227,7 +253,9 @@ const AdminKeywords = () => {
               {/* 민감 키워드 감지된 게시글 목록 */}
               <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">민감 키워드 감지된 게시글</h2>
-                <p className="text-sm text-gray-600 mb-6">게시판에 등록된 글 중 민감 키워드가 감지된 게시글 목록입니다.</p>
+                <p className="text-sm text-gray-600 mb-6">
+                  게시판에 등록된 글 중 민감 키워드가 감지된 게시글 목록입니다.
+                </p>
                 {riskList.loading ? (
                   <div className="py-12 text-center text-gray-500">로딩 중...</div>
                 ) : riskList.content.length === 0 ? (
@@ -238,7 +266,12 @@ const AdminKeywords = () => {
                       {riskList.content.map((item) => (
                         <div
                           key={item.id}
-                          className="p-5 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50/30 transition-colors"
+                          onClick={() => {
+                            if (item.bbsId != null) {
+                              navigate(`/board/view/${item.bbsId}`);
+                            }
+                          }}
+                          className="p-5 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50/30 transition-colors cursor-pointer"
                         >
                           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-2">
                             <span className="px-2 py-0.5 bg-gray-100 rounded">게시판: {item.bbsDiv ?? '—'}</span>
@@ -251,13 +284,9 @@ const AdminKeywords = () => {
                           <p className="text-gray-800 mb-2 line-clamp-3">{item.content || '(내용 없음)'}</p>
                           <div className="flex flex-wrap items-center gap-2">
                             {item.detectedKeywords && (
-                              <span className="text-amber-700 font-medium">
-                                감지 키워드: {item.detectedKeywords}
-                              </span>
+                              <span className="text-amber-700 font-medium">감지 키워드: {item.detectedKeywords}</span>
                             )}
-                            {item.action && (
-                              <span className="text-sm text-gray-600">조치: {item.action}</span>
-                            )}
+                            {item.action && <span className="text-sm text-gray-600">조치: {item.action}</span>}
                           </div>
                         </div>
                       ))}
