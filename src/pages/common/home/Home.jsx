@@ -300,14 +300,9 @@ const Home = () => {
 
             {/* QUICK TEST */}
             <section className="my-10">
-              <h3 className="text-[#111827] mb-8">내 취업 간단 테스트</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <h3 className="text-[#111827] mb-8">취업 도우미</h3>
+              <div className="grid grid-cols-2 gap-4">
                 {[
-                  {
-                    title: '나에게 맞는 직무는?',
-                    desc: '직무 적성 테스트로 나와 맞는 직무를 찾아보세요',
-                    url: '',
-                  },
                   {
                     title: '이력서 점검하기',
                     desc: '내 이력서를 체크리스트로 점검해보세요',
@@ -325,9 +320,6 @@ const Home = () => {
                     onClick={() => navigate(t.url)}
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <span className="inline-block bg-[#e0f2fe] text-[#0284c7] text-[11px] font-semibold px-3 py-1 rounded-full">
-                        테스트
-                      </span>
                     </div>
                     <h5 className="text-[#111827] mb-2">{t.title}</h5>
                     <h6 className="text-[#6b7280] leading-relaxed">{t.desc}</h6>
