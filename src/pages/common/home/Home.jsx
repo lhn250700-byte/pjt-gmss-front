@@ -342,9 +342,8 @@ const Home = () => {
               <h3 className="text-[#111827] mb-8">지금 나에게 필요한 상담은 무엇인가요?</h3>
               <div className="grid grid-cols-3 gap-5">
                 {/* 고민 상담 → AI 상담 */}
-                <button
-                  type="button"
-                  onClick={() => navigate(activeCnslId ? `/chat/withai/${activeCnslId}` : '/chat/withai')}
+                <Link
+                  to="/chat/withai"
                   className="bg-gradient-to-br from-[#2ed3c6] to-[#26b8ad] rounded-[20px] p-8 text-white shadow-[0_8px_24px_rgba(46,211,198,0.25)] hover:shadow-[0_12px_32px_rgba(46,211,198,0.35)] hover:scale-[1.02] transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[200px] border-0 cursor-pointer"
                 >
                   <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center text-[52px] mb-4">
@@ -356,7 +355,7 @@ const Home = () => {
                     <br />
                     지금 마음부터 가볍게 정리해보세요.
                   </h6>
-                </button>
+                </Link>
 
                 {/* 커리어 상담 → 상담사 찾기 (커리어) */}
                 <Link

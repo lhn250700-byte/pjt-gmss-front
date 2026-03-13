@@ -75,7 +75,7 @@ const EditCounselorInfo = () => {
     fetchCounselorInfo();
   }, [accessToken]);
 
-  const availableTags = ['커리어', '진로', '고민'];
+  const availableTags = ['커리어', '취업', '고민'];
 
   const handleTagSelect = (e) => {
     const value = e.target.value;

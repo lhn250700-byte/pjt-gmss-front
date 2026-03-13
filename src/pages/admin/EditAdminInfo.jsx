@@ -13,10 +13,10 @@ const EditAdminInfo = () => {
     navigate('/');
   };
 
-  const admin_info = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_info.png";
-  const dashboard = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/dashboard.png";
-  const analysis = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_analysis%20.png";
-  const admin_mypage = "https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_mypage.png";
+  const admin_info = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_info.png';
+  const dashboard = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/dashboard.png';
+  const analysis = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_analysis%20.png';
+  const admin_mypage = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_mypage.png';
 
   // 1. formData 상태 선언 (초기값으로 현재 닉네임 설정)
   const [formData, setFormData] = useState({
@@ -165,16 +165,6 @@ const EditAdminInfo = () => {
               <div className="flex flex-col items-center mb-12">
                 <div className="w-40 h-40 bg-gray-300 rounded-full mb-6 overflow-hidden">
                   <img src="https://via.placeholder.com/160" alt="Profile" className="w-full h-full object-cover" />
-                </div>
-
-                <div className="flex gap-4">
-                  <button className="px-6 py-2.5 bg-[#2563eb] text-white rounded-lg text-base font-semibold hover:bg-blue-700 transition-colors">
-                    프로필 사진 변경
-                  </button>
-
-                  <button className="px-6 py-2.5 bg-[#2563eb] text-white rounded-lg text-base font-semibold hover:bg-blue-700 transition-colors">
-                    프로필 사진 저장
-                  </button>
                 </div>
               </div>
 
