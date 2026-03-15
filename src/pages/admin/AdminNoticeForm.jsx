@@ -90,15 +90,15 @@ const AdminNoticeForm = () => {
     }
   };
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <>
       {/* LEFT SIDEBAR - 뷰포트 전체 높이 고정 */}
       <aside className="fixed top-0 left-0 bottom-0 z-10 w-[280px] bg-[#2d3e50] text-white flex flex-col">
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">★</span>
-          </div>
-          <span className="text-xl font-bold">고민순삭</span>
+        <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+          <img src={PcLogo} alt="고민순삭" />
         </div>
         <nav className="px-4 py-8">
           <ul className="space-y-1">

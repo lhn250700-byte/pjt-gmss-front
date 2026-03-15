@@ -34,17 +34,20 @@ const Info = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const selected = useMemo(() => getSelectedValue(location.pathname), [location.pathname]);
+  const selected = useMemo(
+    () => getSelectedValue(location.pathname),
+    [location.pathname],
+  );
+
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
 
   return (
     <div className="w-full min-h-screen mx-auto bg-[#f3f7ff] pb-[90px] lg:pb-8">
       {/* Mobile Header */}
-      <header className="lg:hidden bg-[#2a5eea] h-16 flex items-center justify-center">
+      <header className="lg:hidden bg-[#2a5eea] h-24 flex items-center justify-center">
         <div className="flex items-center gap-2 text-white font-bold text-lg">
-          <span className="text-lg leading-none" aria-hidden="true">
-            ★
-          </span>
-          <span>고민순삭</span>
+          <img src={PcLogo} alt="고민순삭" />
         </div>
       </header>
 
@@ -54,7 +57,9 @@ const Info = () => {
           <select
             value={selected}
             onChange={(event) => {
-              const next = MOBILE_OPTIONS.find((o) => o.value === event.target.value);
+              const next = MOBILE_OPTIONS.find(
+                (o) => o.value === event.target.value,
+              );
               if (next) navigate(next.to);
             }}
             className="w-full h-11 rounded-[10px] border border-[#dbe3f1] bg-white px-3 text-[13px]"
@@ -78,7 +83,9 @@ const Info = () => {
                   key={opt.value}
                   to={opt.to}
                   className={`flex-1 h-[72px] flex items-center justify-center !text-[24px] font-medium transition-colors ${
-                    isActive ? 'bg-[#2f80ed] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    isActive
+                      ? 'bg-[#2f80ed] text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {opt.label}
@@ -92,7 +99,10 @@ const Info = () => {
             <Routes>
               <Route index element={<About />} />
               <Route path="d_guide" element={<DocumentGuide type="resume" />} />
-              <Route path="cover_guide" element={<DocumentGuide type="cover" />} />
+              <Route
+                path="cover_guide"
+                element={<DocumentGuide type="cover" />}
+              />
               <Route path="i_guide" element={<InterviewGuide />} />
               <Route path="map" element={<Map />} />
             </Routes>

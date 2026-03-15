@@ -5,6 +5,7 @@ import useAuth from '../../../hooks/useAuth';
 import { memberApi } from '../../../api/backendApi';
 import { MBTI_OPTIONS } from '../../user/board/boardData';
 import { useAuthStore } from '../../../store/auth.store';
+import MbtiTest from './MbtiTest';
 
 const KakaoAdditionalInfo = () => {
   const navigate = useNavigate();
@@ -25,6 +26,24 @@ const KakaoAdditionalInfo = () => {
     introduction: '',
   });
 
+  const [isMbtiOpen, setIsMbtiOpen] = useState(false);
+  const [mbtiDisabled, setMbtiDisabled] = useState(false);
+
+  useEffect(() => {
+    if (isMbtiOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isMbtiOpen]);
+
   // 뒤로가기나 이런 거 못 가게 해야 됨 !!
 
   const handleChange = (e) => {
@@ -43,32 +62,36 @@ const KakaoAdditionalInfo = () => {
 
     const birth = formData.birthdate.replace(/-/g, '');
 
-    const birthRegex = /^\d{8}$/;
-    if (!birthRegex.test(birth)) {
-      setError("생년월일은 '-'를 제외한 8자리로 입력해주세요. (예: 20110308)");
-      return;
-    }
+    if (birth) {
+      const birthRegex = /^\d{8}$/;
+      if (!birthRegex.test(birth)) {
+        setError(
+          "생년월일은 '-'를 제외한 8자리로 입력해주세요. (예: 20110308)",
+        );
+        return;
+      }
 
-    // 실제 날짜 검증
-    const year = Number(birth.substring(0, 4));
-    const month = Number(birth.substring(4, 6));
-    const day = Number(birth.substring(6, 8));
+      // 실제 날짜 검증
+      const year = Number(birth.substring(0, 4));
+      const month = Number(birth.substring(4, 6));
+      const day = Number(birth.substring(6, 8));
 
-    const date = new Date(year, month - 1, day);
+      const date = new Date(year, month - 1, day);
 
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() + 1 !== month ||
-      date.getDate() !== day
-    ) {
-      setError('존재하지 않는 날짜입니다.');
-      return;
-    }
+      if (
+        date.getFullYear() !== year ||
+        date.getMonth() + 1 !== month ||
+        date.getDate() !== day
+      ) {
+        setError('존재하지 않는 날짜입니다.');
+        return;
+      }
 
-    const today = new Date();
-    if (date > today) {
-      setError('미래 날짜는 입력할 수 없습니다.');
-      return;
+      const today = new Date();
+      if (date > today) {
+        setError('미래 날짜는 입력할 수 없습니다.');
+        return;
+      }
     }
 
     setLoading(true);
@@ -166,16 +189,21 @@ const KakaoAdditionalInfo = () => {
     );
   }
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
+  const f_logo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
+
   return (
     <div className="relative w-full min-h-screen bg-[#f3f7ff] flex items-center justify-center p-0 lg:p-8">
       <div className="w-full max-w-[390px] lg:max-w-[500px] min-h-screen lg:min-h-0 lg:overflow-y-auto mx-auto bg-[#f3f7ff] lg:bg-white lg:rounded-3xl lg:shadow-xl">
         <div className="px-6 pt-6 pb-28 lg:px-12 lg:py-10">
           <header className="flex lg:hidden items-center gap-2 mb-4">
             <div className="flex-1 flex items-center justify-center gap-2">
-              <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">★</span>
+              <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+                <img src={PcLogo} alt="고민순삭" />
               </div>
-              <div className="text-xl font-bold text-gray-800">고민순삭</div>
             </div>
             <div className="w-8"></div>
           </header>
@@ -238,7 +266,6 @@ const KakaoAdditionalInfo = () => {
                 placeholder="생년월일을 입력해 주세요 ex]20110308"
                 className="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm focus:outline-none focus:border-[#2f80ed] focus:ring-2 focus:ring-[#2f80ed]/20"
                 disabled={loading}
-                required
               />
             </div>
 
@@ -251,8 +278,8 @@ const KakaoAdditionalInfo = () => {
                   name="mbti"
                   value={formData.mbti}
                   onChange={handleChange}
-                  className="flex-1 h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm focus:outline-none focus:border-[#2f80ed] focus:ring-2 focus:ring-[#2f80ed]/20"
-                  disabled={loading}
+                  className="disabled:cursor-not-allowed disabled:bg-gray-100 flex-1 h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm focus:outline-none focus:border-[#2f80ed] focus:ring-2 focus:ring-[#2f80ed]/20"
+                  disabled={loading || mbtiDisabled}
                 >
                   <option value="">MBTI 작성(리스트로)</option>
                   {MBTI_OPTIONS.map((type) => (
@@ -263,8 +290,9 @@ const KakaoAdditionalInfo = () => {
                 </select>
                 <button
                   type="button"
-                  className="w-24 h-11 rounded-xl bg-[#2f80ed] hover:bg-[#2670d4] text-white text-[10px] font-semibold transition-colors leading-tight"
-                  disabled={loading}
+                  className="w-24 h-11 rounded-xl bg-[#2f80ed] hover:bg-[#2670d4] text-white text-[10px] font-semibold transition-colors leading-tight disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                  disabled={loading || mbtiDisabled}
+                  onClick={() => setIsMbtiOpen(true)}
                 >
                   MBTI 검사하기
                   <br />
@@ -272,6 +300,19 @@ const KakaoAdditionalInfo = () => {
                 </button>
               </div>
             </div>
+            {isMbtiOpen && (
+              <MbtiTest
+                isOpen={isMbtiOpen}
+                onClose={() => setIsMbtiOpen(false)}
+                onResult={(mbtiValue) => {
+                  setFormData((prev) => ({ ...prev, mbti: mbtiValue }));
+                  setMbtiDisabled(true);
+                }}
+                className="fixed inset-0 flex justify-center items-center z-50 bg-black/20 p-4"
+              >
+                <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-auto p-6"></div>
+              </MbtiTest>
+            )}
 
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700">
@@ -299,15 +340,7 @@ const KakaoAdditionalInfo = () => {
 
           <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-600">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">★</span>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600">Happy Com. service</div>
-                <div className="font-semibold text-sm text-gray-700">
-                  고민순삭
-                </div>
-              </div>
+              <img src={f_logo} alt="고민순삭" />
             </div>
           </div>
         </div>

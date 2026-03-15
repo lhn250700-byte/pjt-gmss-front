@@ -13,10 +13,14 @@ const EditAdminInfo = () => {
     navigate('/');
   };
 
-  const admin_info = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_info.png';
-  const dashboard = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/dashboard.png';
-  const analysis = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_analysis%20.png';
-  const admin_mypage = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_mypage.png';
+  const admin_info =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_info.png';
+  const dashboard =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/dashboard.png';
+  const analysis =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_analysis%20.png';
+  const admin_mypage =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/admin_mypage.png';
 
   // 1. formData 상태 선언 (초기값으로 현재 닉네임 설정)
   const [formData, setFormData] = useState({
@@ -67,7 +71,9 @@ const EditAdminInfo = () => {
 
       if (error.response) {
         // 서버가 에러 코드를 준 경우
-        alert(`서버 오류: ${error.response.data.message || error.response.data}`);
+        alert(
+          `서버 오류: ${error.response.data.message || error.response.data}`,
+        );
       } else if (error.message) {
         // 코드가 잘못되었거나 함수가 정의되지 않은 경우
         alert(`클라이언트 오류: ${error.message}`);
@@ -81,16 +87,16 @@ const EditAdminInfo = () => {
     navigate(-1);
   };
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <>
       {/* LEFT SIDEBAR - 뷰포트 전체 높이 고정 */}
       <aside className="fixed top-0 left-0 bottom-0 z-10 w-[280px] bg-[#2d3e50] text-white flex flex-col">
         {/* LOGO */}
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">★</span>
-          </div>
-          <span className="text-xl font-bold">고민순삭</span>
+        <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+          <img src={PcLogo} alt="고민순삭" />
         </div>
 
         {/* NAVIGATION MENU */}
@@ -101,7 +107,12 @@ const EditAdminInfo = () => {
                 to="/alarm"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -126,7 +137,12 @@ const EditAdminInfo = () => {
                 to="/admin/keywords"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -169,7 +185,9 @@ const EditAdminInfo = () => {
                 {nickname ? nickname.charAt(0) : 'A'}
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-semibold text-gray-700">{nickname || '관리자'} 관리자님</span>
+                <span className="text-lg font-semibold text-gray-700">
+                  {nickname || '관리자'} 관리자님
+                </span>
               </div>
             </div>
             <button
@@ -182,22 +200,32 @@ const EditAdminInfo = () => {
 
           <div className="flex-1 px-16 py-12 overflow-y-auto">
             <div className="max-w-[1520px] mx-auto">
-              <h1 className="text-4xl font-bold text-gray-800 mb-12 text-center">관리자 정보 수정</h1>
+              <h1 className="text-4xl font-bold text-gray-800 mb-12 text-center">
+                관리자 정보 수정
+              </h1>
 
               {/* PROFILE IMAGE */}
               <div className="flex flex-col items-center mb-12">
                 <div className="w-40 h-40 bg-gray-300 rounded-full mb-6 overflow-hidden">
-                  <img src="https://via.placeholder.com/160" alt="Profile" className="w-full h-full object-cover" />
+                  <img
+                    src="https://via.placeholder.com/160"
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
 
               {/* FORM SECTION */}
               <div className="bg-white rounded-2xl shadow-lg p-10 mb-10">
-                <h2 className="text-2xl font-bold text-gray-800 mb-8 border-b pb-4">기본 정보 수정</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-8 border-b pb-4">
+                  기본 정보 수정
+                </h2>
                 <div className="space-y-8">
                   {/* 닉네임 변경 */}
                   <div className="flex items-center">
-                    <label className="w-48 text-lg font-semibold text-gray-700">닉네임</label>
+                    <label className="w-48 text-lg font-semibold text-gray-700">
+                      닉네임
+                    </label>
                     <input
                       type="text"
                       name="nickname"
@@ -210,12 +238,16 @@ const EditAdminInfo = () => {
 
                   {/* 비밀번호 섹션 구분선 */}
                   <div className="pt-4 border-t border-gray-100">
-                    <p className="text-sm text-blue-600 mb-6">* 비밀번호 변경 시에만 아래 필드를 입력해 주세요.</p>
+                    <p className="text-sm text-blue-600 mb-6">
+                      * 비밀번호 변경 시에만 아래 필드를 입력해 주세요.
+                    </p>
                   </div>
 
                   {/* 현재 비밀번호 */}
                   <div className="flex items-center">
-                    <label className="w-48 text-lg font-semibold text-gray-700">현재 비밀번호</label>
+                    <label className="w-48 text-lg font-semibold text-gray-700">
+                      현재 비밀번호
+                    </label>
                     <input
                       type="password"
                       name="currentPassword"
@@ -228,7 +260,9 @@ const EditAdminInfo = () => {
 
                   {/* 새 비밀번호 */}
                   <div className="flex items-center">
-                    <label className="w-48 text-lg font-semibold text-gray-700">새 비밀번호</label>
+                    <label className="w-48 text-lg font-semibold text-gray-700">
+                      새 비밀번호
+                    </label>
                     <input
                       type="password"
                       name="newPassword"
@@ -241,7 +275,9 @@ const EditAdminInfo = () => {
 
                   {/* 비밀번호 확인 */}
                   <div className="flex items-center">
-                    <label className="w-48 text-lg font-semibold text-gray-700">비밀번호 확인</label>
+                    <label className="w-48 text-lg font-semibold text-gray-700">
+                      비밀번호 확인
+                    </label>
                     <input
                       type="password"
                       name="confirmPassword"

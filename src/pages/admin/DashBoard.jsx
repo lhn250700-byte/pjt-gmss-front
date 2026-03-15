@@ -296,16 +296,16 @@ const DashBoard = () => {
     return result.trim() || '0분';
   };
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <>
       {/* LEFT SIDEBAR - 뷰포트 전체 높이 고정 */}
       <aside className="fixed top-0 left-0 bottom-0 z-10 w-[280px] bg-[#2d3e50] text-white flex flex-col">
         {/* LOGO */}
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">★</span>
-          </div>
-          <span className="text-xl font-bold">고민순삭</span>
+        <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+          <img src={PcLogo} alt="고민순삭" />
         </div>
 
         {/* NAVIGATION MENU */}
@@ -358,8 +358,18 @@ const DashBoard = () => {
                 to="/admin/keywords"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
                 </svg>
                 <span className="text-lg">민감키워드</span>
               </Link>

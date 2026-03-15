@@ -119,7 +119,10 @@ const Statistics = () => {
         const data = await getWeeklyKeywords();
 
         // 총합 계산
-        const totalScore = data.keywords.reduce((sum, item) => sum + item.score, 0);
+        const totalScore = data.keywords.reduce(
+          (sum, item) => sum + item.score,
+          0,
+        );
 
         // 퍼센트 계산 후 소수점 1자리 반올림
         let temp = data.keywords.map((item) => ({
@@ -165,16 +168,16 @@ const Statistics = () => {
     };
   });
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <>
       {/* LEFT SIDEBAR - 뷰포트 전체 높이 고정 */}
       <aside className="fixed top-0 left-0 bottom-0 z-10 w-[280px] bg-[#2d3e50] text-white flex flex-col">
         {/* LOGO */}
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">★</span>
-          </div>
-          <span className="text-xl font-bold">고민순삭</span>
+        <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+          <img src={PcLogo} alt="고민순삭" />
         </div>
 
         {/* NAVIGATION MENU */}
@@ -185,7 +188,12 @@ const Statistics = () => {
                 to="/alarm"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -201,7 +209,12 @@ const Statistics = () => {
                 to="/dashboard"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -217,7 +230,12 @@ const Statistics = () => {
                 to="/admin/keywords"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -233,7 +251,12 @@ const Statistics = () => {
                 to="/stats"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg bg-white/10 transition-colors text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -249,7 +272,12 @@ const Statistics = () => {
                 to="/admin"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -271,7 +299,9 @@ const Statistics = () => {
           <header className="bg-white px-10 py-5 flex items-center justify-end gap-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-              <span className="text-lg font-semibold text-gray-700">{nickname || ''} 관리자님</span>
+              <span className="text-lg font-semibold text-gray-700">
+                {nickname || ''} 관리자님
+              </span>
             </div>
             <button
               onClick={handleLogout}
@@ -285,7 +315,9 @@ const Statistics = () => {
           <div className="flex-1 px-16 py-12 overflow-y-auto">
             <div className="max-w-[1520px] mx-auto">
               {/* TITLE */}
-              <h1 className="text-4xl font-bold text-gray-800 mb-10">통계 자료</h1>
+              <h1 className="text-4xl font-bold text-gray-800 mb-10">
+                통계 자료
+              </h1>
 
               {/* 파이차트와 키워드 범례 */}
               <div className="bg-white rounded-3xl p-10 shadow-xl mb-10">
@@ -295,7 +327,10 @@ const Statistics = () => {
                   {/* 로딩 상태 추가 권장: {loading ? <Spinner /> : <차트 렌더링>} */}
                   <div className="flex items-center justify-center">
                     <div className="relative w-[380px] h-[380px]">
-                      <svg viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-lg">
+                      <svg
+                        viewBox="0 0 100 100"
+                        className="transform -rotate-90 drop-shadow-lg"
+                      >
                         {/* 각 카테고리별 파이차트 세그먼트 */}
                         {pieSegments.map((segment, index) => (
                           <circle
@@ -310,8 +345,15 @@ const Statistics = () => {
                             strokeDashoffset={segment.strokeDashoffset}
                             className="cursor-pointer transition-all duration-200"
                             style={{
-                              opacity: hoveredSegment === null || hoveredSegment === index ? 1 : 0.3,
-                              filter: hoveredSegment === index ? 'brightness(1.2)' : 'none',
+                              opacity:
+                                hoveredSegment === null ||
+                                hoveredSegment === index
+                                  ? 1
+                                  : 0.3,
+                              filter:
+                                hoveredSegment === index
+                                  ? 'brightness(1.2)'
+                                  : 'none',
                             }}
                             onMouseEnter={() => setHoveredSegment(index)}
                             onMouseLeave={() => setHoveredSegment(null)}
@@ -327,9 +369,13 @@ const Statistics = () => {
                               <div className="flex items-center justify-center gap-2 mb-2">
                                 <div
                                   className="w-4 h-4 rounded-full"
-                                  style={{ backgroundColor: colorsHex[hoveredSegment] }}
+                                  style={{
+                                    backgroundColor: colorsHex[hoveredSegment],
+                                  }}
                                 ></div>
-                                <p className="text-xl font-bold text-gray-800">{pieSegments[hoveredSegment].label}</p>
+                                <p className="text-xl font-bold text-gray-800">
+                                  {pieSegments[hoveredSegment].label}
+                                </p>
                               </div>
                               <p className="text-2xl font-bold text-[#2563eb]">
                                 {pieSegments[hoveredSegment].percentage}%
@@ -344,7 +390,9 @@ const Statistics = () => {
                   {/* 키워드 범례 */}
                   <div className="flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-8">
-                      <h2 className="text-2xl font-bold text-gray-800">이번주 키워드</h2>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        이번주 키워드
+                      </h2>
                     </div>
 
                     {/* 키워드 범례 목록 */}
@@ -355,7 +403,9 @@ const Statistics = () => {
                           key={index}
                           className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                         >
-                          <div className={`w-8 h-8 rounded-full ${colors[index]} shadow-md flex-shrink-0`}></div>
+                          <div
+                            className={`w-8 h-8 rounded-full ${colors[index]} shadow-md flex-shrink-0`}
+                          ></div>
                           <div className="flex flex-col">
                             <span className="text-lg font-semibold text-gray-800">
                               {item.label} ({item.percentage}%)

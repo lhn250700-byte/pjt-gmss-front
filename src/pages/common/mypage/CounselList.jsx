@@ -21,8 +21,15 @@ const CounselList = () => {
       // 2. API 호출 시 token과 activeTab을 함께 전달 (백엔드 요구사항에 따라 인자 조절)
       // Spring Boot Pageable은 0부터 시작하므로 page - 1
       const response = await getMyCnslList(page - 1, pageSize);
+      console.log('test', response.content);
 
-      setCounsels(response.content || []);
+      const filtered = (response.content || []).filter((item) =>
+        activeTab === 'ai'
+          ? item.cnslType === 'AI상담'
+          : item.cnslType !== 'AI상담',
+      );
+
+      setCounsels(filtered);
       setTotalElements(response.totalElements || 0);
     } catch (error) {
       console.error('데이터 로드 실패:', error);
@@ -69,7 +76,9 @@ const CounselList = () => {
                 setPage(1);
               }}
               className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                activeTab === tab ? 'bg-[#2563eb] text-white' : 'bg-white text-gray-700 border border-gray-200'
+                activeTab === tab
+                  ? 'bg-[#2563eb] text-white'
+                  : 'bg-white text-gray-700 border border-gray-200'
               }`}
             >
               {tab === 'ai' ? 'AI상담' : '상담사 상담'}
@@ -79,12 +88,16 @@ const CounselList = () => {
 
         <div className="px-5 space-y-4">
           {isLoading ? (
-            <div className="text-center py-10 text-gray-500 font-medium">로딩 중...</div>
+            <div className="text-center py-10 text-gray-500 font-medium">
+              로딩 중...
+            </div>
           ) : (
             counsels.map((counsel) => (
               <div
                 key={counsel.cnslId}
-                onClick={() => navigate(`/mypage/counsel/counselor/${counsel.cnslId}`)}
+                onClick={() =>
+                  navigate(`/mypage/counsel/counselor/${counsel.cnslId}`)
+                }
                 className="bg-white rounded-xl p-5 border border-gray-200 cursor-pointer active:scale-[0.98] transition-all"
               >
                 <div className="flex justify-between items-start mb-3">
@@ -92,20 +105,30 @@ const CounselList = () => {
                   <h3 className="text-base font-semibold text-gray-800 flex-1 pr-2 line-clamp-1">
                     {counsel.cnslTitle}
                   </h3>
-                  <span className="text-sm text-gray-400">{formatDate(counsel.createdAt)}</span>
+                  <span className="text-sm text-gray-400">
+                    {formatDate(counsel.createdAt)}
+                  </span>
                 </div>
                 <div className="space-y-1 text-sm text-gray-600">
                   {/* DTO: getCnslStat() -> cnslStat */}
                   <p>
-                    상태 : <span className="text-[#2563eb] font-bold">{counsel.cnslStat?.split(' ')[0] || ''}</span>
+                    상태 :{' '}
+                    <span className="text-[#2563eb] font-bold">
+                      {counsel.cnslStat?.split(' ')[0] || ''}
+                    </span>
                   </p>
                   {/* DTO: getNickname() -> nickname */}
                   <p>
-                    상담사 : <span className="font-medium text-gray-800">{counsel.nickname || '배정 대기'}</span>
+                    상담사 :{' '}
+                    <span className="font-medium text-gray-800">
+                      {counsel.nickname || '배정 대기'}
+                    </span>
                   </p>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <span className="text-sm text-[#2563eb] font-bold underline underline-offset-4">상담 내용 보기</span>
+                  <span className="text-sm text-[#2563eb] font-bold underline underline-offset-4">
+                    상담 내용 보기
+                  </span>
                 </div>
               </div>
             ))
@@ -152,26 +175,34 @@ const CounselList = () => {
               </div>
             ) : counsels.length === 0 ? (
               <div className="bg-white rounded-2xl p-32 text-center text-gray-400 text-lg">
-                {activeTab === 'ai' ? 'AI 상담 내역이 없습니다.' : '아직 상담 내역이 없습니다.'}
+                {activeTab === 'ai'
+                  ? 'AI 상담 내역이 없습니다.'
+                  : '아직 상담 내역이 없습니다.'}
               </div>
             ) : (
               counsels.map((counsel) => {
-                console.log('test', counsel);
                 return (
                   <div
                     key={counsel.cnslId}
-                    onClick={() => navigate(`/mypage/counsel/counselor/${counsel.cnslId}`)}
+                    onClick={() =>
+                      navigate(`/mypage/counsel/counselor/${counsel.cnslId}`)
+                    }
                     className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-2xl font-bold text-gray-800 group-hover:text-[#2563eb] transition-colors">
                         {counsel.cnslTitle}
                       </h3>
-                      <span className="text-lg text-gray-400 font-medium">{formatDate(counsel.createdAt)}</span>
+                      <span className="text-lg text-gray-400 font-medium">
+                        {formatDate(counsel.createdAt)}
+                      </span>
                     </div>
                     <div className="flex items-center gap-12 text-lg text-gray-600">
                       <p>
-                        상담 유형 : <span className="font-semibold text-gray-900">{counsel.cnslType}</span>
+                        상담 유형 :{' '}
+                        <span className="font-semibold text-gray-900">
+                          {counsel.cnslType}
+                        </span>
                       </p>
                       <p>
                         상태 :{' '}
@@ -180,7 +211,10 @@ const CounselList = () => {
                         </span>
                       </p>
                       <p>
-                        상담사 : <span className="font-semibold text-gray-900">{counsel.nickname || '시스템'}</span>
+                        상담사 :{' '}
+                        <span className="font-semibold text-gray-900">
+                          {counsel.nickname || '시스템'}
+                        </span>
                       </p>
                     </div>
                     <div className="flex justify-end mt-2">

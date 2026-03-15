@@ -65,16 +65,15 @@ const AdminActivities = () => {
   }));
   const totalPages = pageData.totalPages;
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
   return (
     <>
       {/* LEFT SIDEBAR - 뷰포트 전체 높이 고정 */}
       <aside className="fixed top-0 left-0 bottom-0 z-10 w-[280px] bg-[#2d3e50] text-white flex flex-col">
         {/* LOGO */}
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">★</span>
-          </div>
-          <span className="text-xl font-bold">고민순삭</span>
+        <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+          <img src={PcLogo} alt="고민순삭" />
         </div>
 
         {/* NAVIGATION MENU */}
@@ -85,7 +84,12 @@ const AdminActivities = () => {
                 to="/alarm"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -101,7 +105,12 @@ const AdminActivities = () => {
                 to="/dashboard"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -117,8 +126,18 @@ const AdminActivities = () => {
                 to="/admin/keywords"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
                 </svg>
                 <span className="text-lg">민감키워드</span>
               </Link>
@@ -128,7 +147,12 @@ const AdminActivities = () => {
                 to="/stats"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -144,7 +168,12 @@ const AdminActivities = () => {
                 to="/admin"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -166,7 +195,9 @@ const AdminActivities = () => {
           <header className="bg-white px-10 py-5 flex items-center justify-end gap-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-              <span className="text-lg font-semibold text-gray-700">{nickname || ''} 관리자님</span>
+              <span className="text-lg font-semibold text-gray-700">
+                {nickname || ''} 관리자님
+              </span>
             </div>
             <button
               onClick={handleLogout}
@@ -180,33 +211,57 @@ const AdminActivities = () => {
           <div className="flex-1 px-16 py-12">
             <div className="max-w-[1520px] mx-auto">
               {/* TITLE */}
-              <h1 className="text-4xl font-bold text-gray-800 mb-3">최근 활동 내역</h1>
-              <p className="text-lg text-gray-600 mb-10">위험 단어 사용 상담자 확인 및 조치 현황</p>
+              <h1 className="text-4xl font-bold text-gray-800 mb-3">
+                최근 활동 내역
+              </h1>
+              <p className="text-lg text-gray-600 mb-10">
+                위험 단어 사용 상담자 확인 및 조치 현황
+              </p>
 
               {/* TABLE */}
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-[#2563eb] text-white">
-                      <th className="px-6 py-4 text-center font-bold text-base">날짜</th>
-                      <th className="px-6 py-4 text-center font-bold text-base">상담</th>
-                      <th className="px-6 py-4 text-center font-bold text-base">상담자</th>
-                      <th className="px-6 py-4 text-center font-bold text-base">상담사</th>
-                      <th className="px-6 py-4 text-center font-bold text-base">감지단어</th>
-                      <th className="px-6 py-4 text-center font-bold text-base">위험단계</th>
-                      <th className="px-6 py-4 text-center font-bold text-base">확인 및 조치</th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        날짜
+                      </th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        상담
+                      </th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        상담자
+                      </th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        상담사
+                      </th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        감지단어
+                      </th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        위험단계
+                      </th>
+                      <th className="px-6 py-4 text-center font-bold text-base">
+                        확인 및 조치
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                        <td
+                          colSpan="7"
+                          className="px-6 py-12 text-center text-gray-500"
+                        >
                           로딩 중...
                         </td>
                       </tr>
                     ) : activities.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                        <td
+                          colSpan="7"
+                          className="px-6 py-12 text-center text-gray-500"
+                        >
                           활동 내역이 없습니다.
                         </td>
                       </tr>
@@ -218,10 +273,18 @@ const AdminActivities = () => {
                             index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                           }`}
                         >
-                          <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.date}</td>
-                          <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.type}</td>
-                          <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.counselor}</td>
-                          <td className="px-6 py-4 text-center text-sm text-gray-700">{activity.counselorName}</td>
+                          <td className="px-6 py-4 text-center text-sm text-gray-700">
+                            {activity.date}
+                          </td>
+                          <td className="px-6 py-4 text-center text-sm text-gray-700">
+                            {activity.type}
+                          </td>
+                          <td className="px-6 py-4 text-center text-sm text-gray-700">
+                            {activity.counselor}
+                          </td>
+                          <td className="px-6 py-4 text-center text-sm text-gray-700">
+                            {activity.counselorName}
+                          </td>
                           <td className="px-6 py-4 text-center text-sm font-semibold text-red-600">
                             {activity.keyword}
                           </td>
@@ -244,15 +307,30 @@ const AdminActivities = () => {
               {/* PAGINATION */}
               <div className="flex items-center justify-center gap-3 mt-10">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-white rounded-lg transition-colors"
                   disabled={currentPage === 1}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                 </button>
-                {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map((page) => (
+                {Array.from(
+                  { length: Math.min(totalPages, 10) },
+                  (_, i) => i + 1,
+                ).map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
@@ -266,12 +344,24 @@ const AdminActivities = () => {
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                   className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-white rounded-lg transition-colors"
                   disabled={currentPage === totalPages}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
               </div>

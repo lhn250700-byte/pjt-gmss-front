@@ -14,17 +14,17 @@ const CounselorDefaultPage = () => {
     }
   };
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <div className="w-full">
       {/* MOBILE */}
       <div className="lg:hidden w-full max-w-[390px] min-h-screen mx-auto bg-[#f3f7ff]">
         {/* 헤더 */}
-        <header className="bg-[#2a5eea] h-16 flex items-center justify-center">
+        <header className="bg-[#2a5eea] h-24 flex items-center justify-center ">
           <div className="flex items-center gap-2 text-white font-bold text-lg">
-            <span className="text-lg leading-none" aria-hidden="true">
-              ★
-            </span>
-            <span>고민순삭</span>
+            <img src={PcLogo} alt="고민순삭" />
           </div>
         </header>
 

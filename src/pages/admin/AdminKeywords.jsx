@@ -2,18 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { keywordsApi, risksApi } from '../../api/backendApi';
+import { useAuthStore } from '../../store/auth.store';
 
 const AdminKeywords = () => {
+  const { nickname } = useAuthStore();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [keywords, setKeywords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [addKeyword, setAddKeyword] = useState({ keyword: '', category: '', severity: 3 });
+  const [addKeyword, setAddKeyword] = useState({
+    keyword: '',
+    category: '',
+    severity: 3,
+  });
   const [submitting, setSubmitting] = useState(false);
   const [checkContent, setCheckContent] = useState('');
   const [checkResult, setCheckResult] = useState(null);
   const [riskPage, setRiskPage] = useState(1);
-  const [riskList, setRiskList] = useState({ content: [], totalPages: 1, loading: false });
+  const [riskList, setRiskList] = useState({
+    content: [],
+    totalPages: 1,
+    loading: false,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -52,7 +62,8 @@ const AdminKeywords = () => {
         });
       })
       .catch(() => {
-        if (!cancelled) setRiskList({ content: [], totalPages: 1, loading: false });
+        if (!cancelled)
+          setRiskList({ content: [], totalPages: 1, loading: false });
       });
     return () => {
       cancelled = true;
@@ -93,14 +104,14 @@ const AdminKeywords = () => {
       .catch(() => setCheckResult({ error: '검사 실패' }));
   };
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <>
       <aside className="fixed top-0 left-0 bottom-0 z-10 w-[280px] bg-[#2d3e50] text-white flex flex-col">
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">★</span>
-          </div>
-          <span className="text-xl font-bold">고민순삭</span>
+        <div className="px-6 py-2.5 flex items-center gap-3 border-b border-white/10">
+          <img src={PcLogo} alt="고민순삭" />
         </div>
         <nav className="px-4 py-8">
           <ul className="space-y-1">
@@ -109,7 +120,12 @@ const AdminKeywords = () => {
                 to="/alarm"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -125,7 +141,12 @@ const AdminKeywords = () => {
                 to="/dashboard"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -141,7 +162,12 @@ const AdminKeywords = () => {
                 to="/admin/keywords"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg bg-white/10 text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -157,7 +183,12 @@ const AdminKeywords = () => {
                 to="/stats"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -173,7 +204,12 @@ const AdminKeywords = () => {
                 to="/admin"
                 className="flex items-center gap-4 px-6 py-4 rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -191,7 +227,9 @@ const AdminKeywords = () => {
       <div className="min-h-screen flex flex-col pl-[280px] bg-[#f3f7ff]">
         <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
           <header className="bg-white px-10 py-5 flex items-center justify-end gap-4 border-b border-gray-200">
-            <span className="text-lg font-semibold text-gray-700">{user?.email?.split('@')[0] || '관리자'}님</span>
+            <span className="text-lg font-semibold text-gray-700">
+              {nickname + ' 관리자님' || ''}
+            </span>
             <button
               onClick={() => navigate('/')}
               className="px-6 py-2.5 bg-white border-2 border-[#2563eb] text-[#2563eb] rounded-lg text-base font-semibold hover:bg-blue-50"
@@ -202,41 +240,71 @@ const AdminKeywords = () => {
 
           <div className="flex-1 px-16 py-12">
             <div className="max-w-[1520px] mx-auto">
-              <h1 className="text-4xl font-bold text-gray-800 mb-3">민감 키워드 관리</h1>
-              <p className="text-lg text-gray-600 mb-10">등록된 민감 키워드 목록 및 내용 검사</p>
+              <h1 className="text-4xl font-bold text-gray-800 mb-3">
+                민감 키워드 관리
+              </h1>
+              <p className="text-lg text-gray-600 mb-10">
+                등록된 민감 키워드 목록 및 내용 검사
+              </p>
 
               {/* 키워드 추가 */}
               <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">키워드 추가</h2>
-                <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  키워드 추가
+                </h2>
+                <form
+                  onSubmit={handleAdd}
+                  className="flex flex-wrap items-end gap-4"
+                >
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">키워드</label>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      키워드
+                    </label>
                     <input
                       type="text"
                       value={addKeyword.keyword}
-                      onChange={(e) => setAddKeyword((p) => ({ ...p, keyword: e.target.value }))}
+                      onChange={(e) =>
+                        setAddKeyword((p) => ({
+                          ...p,
+                          keyword: e.target.value,
+                        }))
+                      }
                       className="h-10 px-3 border border-gray-300 rounded-lg"
                       placeholder="키워드"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">분류</label>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      분류
+                    </label>
                     <input
                       type="text"
                       value={addKeyword.category}
-                      onChange={(e) => setAddKeyword((p) => ({ ...p, category: e.target.value }))}
+                      onChange={(e) =>
+                        setAddKeyword((p) => ({
+                          ...p,
+                          category: e.target.value,
+                        }))
+                      }
                       className="h-10 px-3 border border-gray-300 rounded-lg"
                       placeholder="category"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">위험도 (1~5)</label>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      위험도 (1~5)
+                    </label>
                     <input
                       type="number"
                       min={1}
                       max={5}
                       value={addKeyword.severity}
-                      onChange={(e) => setAddKeyword((p) => ({ ...p, severity: e.target.value }))}
+                      onChange={(e) =>
+                        setAddKeyword((p) => ({
+                          ...p,
+                          severity: e.target.value,
+                        }))
+                      }
                       className="h-10 px-3 border border-gray-300 rounded-lg w-20"
                     />
                   </div>
@@ -252,14 +320,20 @@ const AdminKeywords = () => {
 
               {/* 민감 키워드 감지된 게시글 목록 */}
               <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">민감 키워드 감지된 게시글</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  민감 키워드 감지된 게시글
+                </h2>
                 <p className="text-sm text-gray-600 mb-6">
                   게시판에 등록된 글 중 민감 키워드가 감지된 게시글 목록입니다.
                 </p>
                 {riskList.loading ? (
-                  <div className="py-12 text-center text-gray-500">로딩 중...</div>
+                  <div className="py-12 text-center text-gray-500">
+                    로딩 중...
+                  </div>
                 ) : riskList.content.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500">감지된 게시글이 없습니다.</div>
+                  <div className="py-12 text-center text-gray-500">
+                    감지된 게시글이 없습니다.
+                  </div>
                 ) : (
                   <>
                     <div className="space-y-4 mb-6">
@@ -274,19 +348,36 @@ const AdminKeywords = () => {
                           className="p-5 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50/30 transition-colors cursor-pointer"
                         >
                           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-2">
-                            <span className="px-2 py-0.5 bg-gray-100 rounded">게시판: {item.bbsDiv ?? '—'}</span>
+                            <span className="px-2 py-0.5 bg-gray-100 rounded">
+                              게시판: {item.bbsDiv ?? '—'}
+                            </span>
                             <span>글번호: {item.bbsId}</span>
-                            {item.memberId && <span>작성자: {item.memberId}</span>}
+                            {item.memberId && (
+                              <span>작성자: {item.memberId}</span>
+                            )}
                             {item.createdAt && (
-                              <span>감지일시: {new Date(item.createdAt).toLocaleString('ko-KR')}</span>
+                              <span>
+                                감지일시:{' '}
+                                {new Date(item.createdAt).toLocaleString(
+                                  'ko-KR',
+                                )}
+                              </span>
                             )}
                           </div>
-                          <p className="text-gray-800 mb-2 line-clamp-3">{item.content || '(내용 없음)'}</p>
+                          <p className="text-gray-800 mb-2 line-clamp-3">
+                            {item.content || '(내용 없음)'}
+                          </p>
                           <div className="flex flex-wrap items-center gap-2">
                             {item.detectedKeywords && (
-                              <span className="text-amber-700 font-medium">감지 키워드: {item.detectedKeywords}</span>
+                              <span className="text-amber-700 font-medium">
+                                감지 키워드: {item.detectedKeywords}
+                              </span>
                             )}
-                            {item.action && <span className="text-sm text-gray-600">조치: {item.action}</span>}
+                            {item.action && (
+                              <span className="text-sm text-gray-600">
+                                조치: {item.action}
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -320,14 +411,20 @@ const AdminKeywords = () => {
                   <summary className="cursor-pointer text-gray-600 hover:text-gray-800 font-medium">
                     직접 텍스트 검사 (민감 키워드 포함 여부 / 위험도)
                   </summary>
-                  <form onSubmit={handleCheckContent} className="flex gap-4 mt-4">
+                  <form
+                    onSubmit={handleCheckContent}
+                    className="flex gap-4 mt-4"
+                  >
                     <textarea
                       value={checkContent}
                       onChange={(e) => setCheckContent(e.target.value)}
                       className="flex-1 min-h-[80px] px-3 py-2 border border-gray-300 rounded-lg"
                       placeholder="검사할 텍스트를 입력하세요"
                     />
-                    <button type="submit" className="h-10 px-6 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                    <button
+                      type="submit"
+                      className="h-10 px-6 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+                    >
                       검사
                     </button>
                   </form>
@@ -338,9 +435,14 @@ const AdminKeywords = () => {
                       ) : (
                         <>
                           <p className="font-medium">
-                            민감 키워드 포함: {checkResult.has_sensitive_keywords ? '예' : '아니오'}
+                            민감 키워드 포함:{' '}
+                            {checkResult.has_sensitive_keywords
+                              ? '예'
+                              : '아니오'}
                           </p>
-                          <p className="text-sm text-gray-600">최대 위험도: {checkResult.max_severity}</p>
+                          <p className="text-sm text-gray-600">
+                            최대 위험도: {checkResult.max_severity}
+                          </p>
                           {checkResult.detected_keywords?.length > 0 && (
                             <ul className="mt-2 text-sm">
                               {checkResult.detected_keywords.map((d, i) => (
@@ -359,30 +461,47 @@ const AdminKeywords = () => {
 
               {/* 키워드 목록 */}
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <h2 className="text-xl font-semibold text-gray-800 p-6 border-b">등록된 키워드 목록</h2>
+                <h2 className="text-xl font-semibold text-gray-800 p-6 border-b">
+                  등록된 키워드 목록
+                </h2>
                 {loading ? (
-                  <div className="p-12 text-center text-gray-500">로딩 중...</div>
+                  <div className="p-12 text-center text-gray-500">
+                    로딩 중...
+                  </div>
                 ) : keywords.length === 0 ? (
-                  <div className="p-12 text-center text-gray-500">등록된 키워드가 없습니다.</div>
+                  <div className="p-12 text-center text-gray-500">
+                    등록된 키워드가 없습니다.
+                  </div>
                 ) : (
                   <table className="w-full">
                     <thead>
                       <tr className="bg-[#2563eb] text-white">
                         <th className="px-6 py-4 text-left font-bold">ID</th>
-                        <th className="px-6 py-4 text-left font-bold">키워드</th>
+                        <th className="px-6 py-4 text-left font-bold">
+                          키워드
+                        </th>
                         <th className="px-6 py-4 text-left font-bold">분류</th>
-                        <th className="px-6 py-4 text-left font-bold">위험도</th>
+                        <th className="px-6 py-4 text-left font-bold">
+                          위험도
+                        </th>
                         <th className="px-6 py-4 text-left font-bold">활성</th>
                       </tr>
                     </thead>
                     <tbody>
                       {keywords.map((kw) => (
-                        <tr key={kw.keywordId} className="border-b border-gray-200 hover:bg-gray-50">
+                        <tr
+                          key={kw.keywordId}
+                          className="border-b border-gray-200 hover:bg-gray-50"
+                        >
                           <td className="px-6 py-4">{kw.keywordId}</td>
-                          <td className="px-6 py-4 font-medium">{kw.keyword}</td>
+                          <td className="px-6 py-4 font-medium">
+                            {kw.keyword}
+                          </td>
                           <td className="px-6 py-4">{kw.category ?? '—'}</td>
                           <td className="px-6 py-4">{kw.severity}</td>
-                          <td className="px-6 py-4">{kw.isActive ? '활성' : '비활성'}</td>
+                          <td className="px-6 py-4">
+                            {kw.isActive ? '활성' : '비활성'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

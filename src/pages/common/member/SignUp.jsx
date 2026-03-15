@@ -13,6 +13,9 @@ const SignUp = () => {
   const [isMbtiOpen, setIsMbtiOpen] = useState(false);
   const [mbtiDisabled, setMbtiDisabled] = useState(false);
 
+  const f_logo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
+
   // 모달 열릴 때 바깥 스크롤 막기
   useEffect(() => {
     if (isMbtiOpen) {
@@ -48,9 +51,12 @@ const SignUp = () => {
 
   const handleNickname = async () => {
     try {
-      const { userInfoNicknameCheckYn: result } = await getmemberInfoNicknameCheckYn(formData.nickname);
+      const { userInfoNicknameCheckYn: result } =
+        await getmemberInfoNicknameCheckYn(formData.nickname);
       if (result === 'Y') {
-        alert('해당 닉네임은 이미 등록되어 있습니다. 고유한 닉네임을 입력해주세요.');
+        alert(
+          '해당 닉네임은 이미 등록되어 있습니다. 고유한 닉네임을 입력해주세요.',
+        );
         return;
       } else alert('사용 가능한 닉네임입니다.');
     } catch (error) {
@@ -85,7 +91,9 @@ const SignUp = () => {
       email: formData.email,
       password: formData.password,
       nickname: formData.nickname,
-      birth: formData.birthdate.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3') || null,
+      birth:
+        formData.birthdate.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3') ||
+        null,
       mbti: formData.mbti || null,
       text: null,
       social: false,
@@ -105,6 +113,9 @@ const SignUp = () => {
     setLoading(false);
   };
 
+  const PcLogo =
+    'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/h_logo.png';
+
   return (
     <div className="relative w-full min-h-screen bg-[#f3f7ff] flex items-center justify-center p-0 lg:p-8">
       {/* Mobile + PC Container */}
@@ -112,14 +123,14 @@ const SignUp = () => {
         <div className="px-6 pt-6 pb-28 lg:px-12 lg:py-10">
           {/* Header - PC에서 숨김 */}
           <header className="flex lg:hidden items-center gap-2 mb-4">
-            <Link to="/member/signin" className="text-2xl leading-none text-gray-700">
+            <Link
+              to="/member/signin"
+              className="text-2xl leading-none text-gray-700"
+            >
               ←
             </Link>
             <div className="flex-1 flex items-center justify-center gap-2">
-              <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">★</span>
-              </div>
-              <div className="text-xl font-bold text-gray-800">고민순삭</div>
+              <img src={PcLogo} alt="고민순삭" />
             </div>
             <div className="w-8"></div>
           </header>
@@ -134,7 +145,10 @@ const SignUp = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:gap-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-3 lg:gap-4"
+          >
             <div>
               <label className="block text-sm lg:text-base font-semibold lg:font-normal mb-2 text-gray-700">
                 이메일 <span className="text-red-600">*</span>
@@ -150,7 +164,9 @@ const SignUp = () => {
                 required
               />
               {error && !formData.email && (
-                <p className="mt-1 text-xs lg:text-xs text-red-600">유효하지 않은 이메일입니다</p>
+                <p className="mt-1 text-xs lg:text-xs text-red-600">
+                  유효하지 않은 이메일입니다
+                </p>
               )}
             </div>
 
@@ -180,7 +196,8 @@ const SignUp = () => {
               </div>
               {error && !formData.nickname && (
                 <p className="mt-1 text-xs lg:text-xs text-red-600">
-                  사용할 수 없는 닉네임입니다 / 4자 이상 12자 이하의 닉네임을 사용해 주세요
+                  사용할 수 없는 닉네임입니다 / 4자 이상 12자 이하의 닉네임을
+                  사용해 주세요
                 </p>
               )}
             </div>
@@ -218,9 +235,13 @@ const SignUp = () => {
                 disabled={loading}
                 required
               />
-              {formData.password && formData.passwordConfirm && formData.password !== formData.passwordConfirm && (
-                <p className="mt-1 text-xs lg:text-xs text-red-600">비밀번호가 틀립니다. 다시 확인해 주세요</p>
-              )}
+              {formData.password &&
+                formData.passwordConfirm &&
+                formData.password !== formData.passwordConfirm && (
+                  <p className="mt-1 text-xs lg:text-xs text-red-600">
+                    비밀번호가 틀립니다. 다시 확인해 주세요
+                  </p>
+                )}
             </div>
 
             <div>
@@ -237,11 +258,15 @@ const SignUp = () => {
                 disabled={loading}
                 required
               />
-              <p className="mt-1 text-xs lg:text-sm text-red-600">생년월일은 '-'를 제외한 8자리 입력해주세요</p>
+              <p className="mt-1 text-xs lg:text-sm text-red-600">
+                생년월일은 '-'를 제외한 8자리 입력해주세요
+              </p>
             </div>
 
             <div>
-              <label className="block text-sm lg:text-base font-semibold lg:font-normal mb-2 text-gray-700">성별</label>
+              <label className="block text-sm lg:text-base font-semibold lg:font-normal mb-2 text-gray-700">
+                성별
+              </label>
               <div className="flex gap-2">
                 <select
                   name="gender"
@@ -324,7 +349,8 @@ const SignUp = () => {
 
             <div>
               <label className="block text-sm lg:text-base font-semibold lg:font-normal mb-2 text-gray-700">
-                자기 소개(메모스타) <span className="text-blue-600">(선택)</span>
+                자기 소개(메모스타){' '}
+                <span className="text-blue-600">(선택)</span>
               </label>
               <textarea
                 name="introduction"
@@ -348,13 +374,7 @@ const SignUp = () => {
 
           <div className="mt-6 lg:mt-10 flex items-center justify-center gap-2 text-xs text-gray-600">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">★</span>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600">Healing Therapy</div>
-                <div className="font-semibold text-sm text-gray-700">고민순삭</div>
-              </div>
+              <img src={f_logo} alt="로고" className="w-44 h-auto" />
             </div>
           </div>
         </div>
@@ -366,16 +386,14 @@ const SignUp = () => {
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 w-full max-w-[340px] rounded-3xl bg-white px-8 py-10 text-center shadow-2xl">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-12 h-12 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">★</span>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Healing Therapy</div>
-                <div className="font-bold text-lg text-gray-800">고민순삭</div>
-              </div>
+              <img src={f_logo} alt="로고" />
             </div>
-            <h3 className="text-2xl lg:text-[30px] font-bold lg:font-semibold mb-3 text-gray-800">회원 가입 완료</h3>
-            <p className="text-sm lg:text-base text-gray-600 mb-6">정상적으로 회원 가입이 완료되었습니다</p>
+            <h3 className="text-2xl lg:text-[30px] font-bold lg:font-semibold mb-3 text-gray-800">
+              회원 가입 완료
+            </h3>
+            <p className="text-sm lg:text-base text-gray-600 mb-6">
+              정상적으로 회원 가입이 완료되었습니다
+            </p>
             <button className="block w-full h-12 rounded-xl bg-[#2f80ed] hover:bg-[#2670d4] text-white text-sm lg:text-base font-semibold lg:font-normal leading-[3rem] transition-colors cursor-pointer">
               <Link to="/member/signin" onClick={() => setIsSuccessOpen(false)}>
                 로그인으로
