@@ -30,7 +30,7 @@ const SIZE_OPTIONS = ['16px', '18px', '22px', '28px'];
 
 const BoardForm = ({ mode = 'write', postId = null }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, uploadPostImage, savePostImage } = useAuth();
   const storeEmail = useAuthStore((s) => s.email);
   const storeNickname = useAuthStore((s) => s.nickname);
   const [boardType, setBoardType] = useState('전체');
@@ -45,6 +45,11 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
   const [attachments, setAttachments] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadError, setLoadError] = useState(null);
+
+  const [imageInfo, setImageInfo] = useState({
+    imgUrl: null,
+    imgName: null,
+  });
 
   const f_logo =
     'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
@@ -91,9 +96,17 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
     [mbtiType, showMbtiSelect],
   );
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     setAttachments([...attachments, ...files]);
+
+    if (files) {
+      const res = await uploadPostImage(files[0]);
+      setImageInfo({
+        imgUrl: res.img_url,
+        imgName: res.img_name,
+      });
+    }
   };
 
   const getFontFamily = (fontName) => {
@@ -355,6 +368,8 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                     mbti: mbtiType || '',
                     title,
                     content,
+                    img_url: imageInfo.imgUrl || null,
+                    img_name: imageInfo.imgName || null,
                   };
                   setSubmitting(true);
                   try {
@@ -381,7 +396,14 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                     if (mode === 'edit' && postId) {
                       await bbsApi.update(postId, body, userIdForApi);
                     } else {
-                      await bbsApi.create(body, userIdForApi);
+                      const data = await bbsApi.create(body, userIdForApi);
+                      if (data) {
+                        await savePostImage(
+                          data.data.bbsId,
+                          imageInfo.imgName || null,
+                          imageInfo.imgUrl || null,
+                        );
+                      }
                     }
                     setIsCompleteOpen(true);
                   } catch (e) {
@@ -599,6 +621,8 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                       mbti: mbtiType || '',
                       title,
                       content,
+                      img_url: imageInfo.imgUrl || null,
+                      img_name: imageInfo.imgName || null,
                     };
                     setSubmitting(true);
                     try {
@@ -624,7 +648,15 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                       if (mode === 'edit' && postId) {
                         await bbsApi.update(postId, body, userIdForApi);
                       } else {
-                        await bbsApi.create(body, userIdForApi);
+                        const data = await bbsApi.create(body, userIdForApi);
+
+                        if (data) {
+                          await savePostImage(
+                            data.data.bbsId,
+                            imageInfo.imgName || null,
+                            imageInfo.imgUrl || null,
+                          );
+                        }
                       }
                       setIsCompleteOpen(true);
                     } catch (e) {

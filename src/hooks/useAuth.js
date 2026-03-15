@@ -35,8 +35,12 @@ export default function useAuth() {
           // Supabase 세션이 있으면 우선 사용
           const provider = session.user.app_metadata?.provider;
           const userRole = session.user.user_metadata?.role || 'USER';
-          const kakaoAdditionalDone = !!session.user.user_metadata?.kakao_additional_done;
-          const nickname = session.user.user_metadata?.nickname || session.user.email?.split('@')[0] || 'user';
+          const kakaoAdditionalDone =
+            !!session.user.user_metadata?.kakao_additional_done;
+          const nickname =
+            session.user.user_metadata?.nickname ||
+            session.user.email?.split('@')[0] ||
+            'user';
           setUser({
             isLogin: true,
             role: userRole,
@@ -127,8 +131,12 @@ export default function useAuth() {
         // Supabase 로그인 시
         const provider = session.user.app_metadata?.provider;
         const userRole = session.user.user_metadata?.role || 'USER';
-        const kakaoAdditionalDone = !!session.user.user_metadata?.kakao_additional_done;
-        const nickname = session.user.user_metadata?.nickname || session.user.email?.split('@')[0] || 'user';
+        const kakaoAdditionalDone =
+          !!session.user.user_metadata?.kakao_additional_done;
+        const nickname =
+          session.user.user_metadata?.nickname ||
+          session.user.email?.split('@')[0] ||
+          'user';
         setUser({
           isLogin: true,
           role: userRole,
@@ -243,7 +251,10 @@ export default function useAuth() {
   // 카카오 회원가입
   const kakaoSignUp = async (formData) => {
     try {
-      const { data } = await authApi.patch('/api/member/kakao-signup', formData);
+      const { data } = await authApi.patch(
+        '/api/member/kakao-signup',
+        formData,
+      );
 
       console.log('회원가입 완료', data);
       return data;
@@ -267,21 +278,26 @@ export default function useAuth() {
     }
   };
 
+  // 프사 편집
   const uploadProfileImage = async (file) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
 
     const filePath = `profile/${fileName}`;
 
-    const { error } = await supabase.storage.from('profile-images').upload(filePath, file, {
-      upsert: false,
-    });
+    const { error } = await supabase.storage
+      .from('profile-images')
+      .upload(filePath, file, {
+        upsert: false,
+      });
 
     if (error) {
       throw error;
     }
 
-    const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from('profile-images')
+      .getPublicUrl(filePath);
 
     return {
       img_name: fileName,
@@ -297,6 +313,47 @@ export default function useAuth() {
         img_url: imgUrl,
       })
       .eq('member_id', memberId);
+
+    if (error) {
+      throw error;
+    }
+  };
+
+  // 게시판 이미지 편집
+  const uploadPostImage = async (file) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+
+    const filePath = `post/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('profile-images')
+      .upload(filePath, file, {
+        upsert: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const { data } = supabase.storage
+      .from('profile-images')
+      .getPublicUrl(filePath);
+
+    return {
+      img_name: fileName,
+      img_url: data.publicUrl,
+    };
+  };
+
+  const savePostImage = async (bbsId, imgName, imgUrl) => {
+    const { error } = await supabase
+      .from('bbs')
+      .update({
+        img_name: imgName,
+        img_url: imgUrl,
+      })
+      .eq('bbs_id', bbsId);
 
     if (error) {
       throw error;
@@ -322,6 +379,8 @@ export default function useAuth() {
     kakaoSignUp,
     uploadProfileImage,
     saveProfileImage,
+    uploadPostImage,
+    savePostImage,
     editInfo,
     getUserInfo,
   };
