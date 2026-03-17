@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import KakaoAdditionalRedirect from './components/KakaoAdditionalRedirect';
 import Home from './pages/common/home/Home';
 import Chat from './pages/user/chat/Chat';
@@ -34,6 +34,7 @@ import EditCounselorAbout from './pages/system/info/EditCounselorAbout';
 import CounselorClientChat from './pages/system/info/CounselorClientChat';
 import ScheduleManagement from './pages/system/info/ScheduleManagement';
 import RiskCaseList from './pages/system/info/RiskCaseList';
+import RiskCaseDetail from './pages/system/info/RiskCaseDetail';
 import { refreshAccessToken } from './axios/Auth';
 import { useAuthStore } from './store/auth.store';
 
@@ -41,9 +42,23 @@ const App = () => {
   const { accessToken } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    if (!accessToken) refreshAccessToken().finally(() => setIsLoading(false));
-    else setIsLoading(false);
-  }, []);
+    let done = false;
+    const setDone = () => {
+      if (!done) {
+        done = true;
+        setIsLoading(false);
+      }
+    };
+    const timeout = setTimeout(setDone, 8000);
+    if (!accessToken) {
+      refreshAccessToken().finally(setDone);
+    } else {
+      setDone();
+    }
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [accessToken]);
 
   if (isLoading) return <div>로딩 중 ...</div>;
 
@@ -64,7 +79,7 @@ const App = () => {
         <Route
           path="/chat/*"
           element={
-            <ProtectedRoute allowRoles={['USER']}>
+            <ProtectedRoute allowRoles={['USER', 'SYSTEM']}>
               <Chat />
             </ProtectedRoute>
           }
@@ -126,6 +141,15 @@ const App = () => {
           element={
             <ProtectedRoute allowRoles={['SYSTEM']}>
               <RiskCaseList />
+            </ProtectedRoute>
+          }
+        />
+        {/* RISK CASE DETAIL - 상담사 게시글 보기 및 댓글 */}
+        <Route
+          path="/system/info/risk-case/:riskId"
+          element={
+            <ProtectedRoute allowRoles={['SYSTEM']}>
+              <RiskCaseDetail />
             </ProtectedRoute>
           }
         />

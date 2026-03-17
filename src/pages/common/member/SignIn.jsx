@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
 import { useAuthStore } from '../../../store/auth.store';
 import { authApi } from '../../../axios/Auth';
+import { normalizeRole } from '../../../utils/roleUtils';
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ const SignIn = () => {
   const setRoleName = useAuthStore((state) => state.setRoleName);
   const setNickname = useAuthStore((state) => state.setNickname);
 
+  const f_logo = 'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -29,18 +32,14 @@ const SignIn = () => {
     }
 
     try {
-      const res = await authApi.post('/api/member/login', null, {
-        params: {
-          username: email,
-          password: password,
-        },
-      });
+      const res = await authApi.post('/api/auth/login', { username: email, password });
 
       console.log('로그인 테스트 == ', res);
       if (res.data.accessToken) {
+        const role = normalizeRole(res.data.roleNames?.[0]);
         setAccessToken(res.data.accessToken);
         setLoginStatus(true);
-        setRoleName(res.data.roleNames[0]);
+        setRoleName(role);
         setNickname(res.data.nickname);
 
         if (res.data.email) {
@@ -49,8 +48,8 @@ const SignIn = () => {
 
         setShowSuccessModal(true);
         setTimeout(() => {
-          if (res.data.roleNames[0] === 'USER') navigate('/');
-          else if (res.data.roleNames[0] === 'SYSTEM') navigate('/system/mypage');
+          if (role === 'USER') navigate('/');
+          else if (role === 'SYSTEM') navigate('/system/mypage');
           else navigate('/alarm');
         }, 1500);
       } else {
@@ -68,8 +67,11 @@ const SignIn = () => {
   };
 
   const handleKakaoLogin = () => {
-    // TODO: 카카오톡 로그인 API 연동
-    window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
+    const apiBase =
+      import.meta.env.VITE_API_BASE_URL ||
+      import.meta.env.VITE_BACKEND_URL ||
+      'http://localhost:8080';
+    window.location.href = `${apiBase.replace(/\/$/, '')}/oauth2/authorization/kakao`;
   };
 
   return (
@@ -83,10 +85,7 @@ const SignIn = () => {
               ←
             </Link>
             <div className="flex-1 flex items-center justify-center gap-2">
-              <div className="w-10 h-10 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">★</span>
-              </div>
-              <div className="text-xl font-bold text-gray-800">고민순삭</div>
+              <img src={f_logo} alt="로고" />
             </div>
             <div className="w-8"></div>
           </header>
@@ -167,15 +166,10 @@ const SignIn = () => {
             </div>
           </form>
 
+{/* pc */}
           <div className="mt-8 lg:mt-10 flex items-center justify-center gap-2 text-xs lg:text-xs text-gray-600">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm lg:text-sm">★</span>
-              </div>
-              <div>
-                <div className="text-xs lg:text-xs text-gray-600">Healing Therapy</div>
-                <div className="font-semibold text-sm lg:text-sm text-gray-700">고민순삭</div>
-              </div>
+            <div className="flex w-32 h-auto items-center gap-2">
+              <img src={f_logo} alt="로고" />
             </div>
           </div>
         </div>
@@ -187,13 +181,7 @@ const SignIn = () => {
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 w-full max-w-[340px] rounded-3xl bg-white px-8 py-10 text-center shadow-2xl">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-12 h-12 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">★</span>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Healing Therapy</div>
-                <div className="font-bold text-lg text-gray-800">고민순삭</div>
-              </div>
+              <img src={f_logo} alt="로고" />
             </div>
             <h3 className="text-2xl lg:text-[30px] font-bold lg:font-semibold mb-3 text-gray-800">로그인 완료</h3>
             <p className="text-sm lg:text-base text-gray-600 mb-6">정상적으로 로그인 되었습니다</p>

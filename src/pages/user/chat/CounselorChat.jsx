@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
+import { useAuthStore } from '../../../store/auth.store';
 
 function normalizeRole(rawRole) {
   if (!rawRole) return rawRole;
@@ -17,15 +18,16 @@ function roleDisplayLabel(role) {
 
 function mapMemberRow(row) {
   if (!row) return null;
-  const emailVal = row.email ?? row.member_id;
+  // public.member PK는 member_id(varchar)=이메일
+  const emailVal = row.member_id ?? row.email;
   return {
     id: row.id ?? emailVal,
     email: emailVal,
-    role: normalizeRole(row.role),
     nickname: row.nickname,
     mbti: row.mbti,
     persona: row.persona,
     profile: row.profile,
+    imgUrl: row.img_url ?? row.imgUrl,
   };
 }
 
@@ -37,6 +39,8 @@ function mapMemberRow(row) {
 const CounselorChat = () => {
   const { id: cnsl_id } = useParams();
   const navigate = useNavigate();
+  const storeEmail = useAuthStore((s) => s.email);
+  const storeLoginStatus = useAuthStore((s) => s.loginStatus);
 
   const [me, setMe] = useState(null);
   const [other, setOther] = useState(null);
@@ -69,16 +73,12 @@ const CounselorChat = () => {
       setErrorMsg('');
 
       try {
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser();
-        if (authError || !user) {
+        const currentEmail = storeLoginStatus ? storeEmail : null;
+        if (!currentEmail) {
           setErrorMsg('로그인 정보가 없습니다. 다시 로그인해 주세요.');
           setLoading(false);
           return;
         }
-        const currentEmail = user.email;
 
         const cnslIdNum = parseInt(cnsl_id, 10);
         if (isNaN(cnslIdNum) || cnslIdNum <= 0) {
@@ -101,7 +101,7 @@ const CounselorChat = () => {
 
         const cnslTp = String(cnslRow.cnsl_tp || '').trim();
         if (cnslTp !== '4') {
-          setErrorMsg('해당 상담 유형(cnsl_tp=4)이 아닙니다.');
+          setErrorMsg('해당 상담 유형이 아닙니다.');
           setLoading(false);
           return;
         }
@@ -112,28 +112,12 @@ const CounselorChat = () => {
           return;
         }
 
-        const stat =
+        // 상태 코드 정규화
+        // A=대기, B=예약 완료, C=진행중, E=종료중, D=완료
+        let stat =
           String(cnslRow.cnsl_stat || 'A')
             .trim()
             .toUpperCase() || 'A';
-        if (stat === 'A') {
-          const { data: inProgressRows } = await supabase
-            .from('cnsl_reg')
-            .select('cnsl_id, member_id, cnsler_id')
-            .eq('cnsl_tp', '4')
-            .eq('cnsl_stat', 'C');
-          const inProgressItem = inProgressRows?.find(
-            (r) =>
-              (String(r.member_id || '') === currentEmail || String(r.cnsler_id || '') === currentEmail) &&
-              Number(r.cnsl_id) !== cnslIdNum,
-          );
-          if (inProgressItem?.cnsl_id) {
-            setLoading(false);
-            navigate(`/chat/cnslchat/${inProgressItem.cnsl_id}`, { replace: true });
-            return;
-          }
-        }
-
         setCnslStat(stat);
         const member_id = cnslRow.member_id || '';
         const cnsler_id = cnslRow.cnsler_id || '';
@@ -149,10 +133,11 @@ const CounselorChat = () => {
 
         const partnerEmail = isMemberSide ? cnsler_id : member_id;
 
+        // public.member PK는 member_id(varchar)=이메일, email/role 컬럼 없음
         const { data: memberRows, error: memberError } = await supabase
           .from('member')
-          .select('id, email, role, nickname, mbti, persona, profile')
-          .in('email', [currentEmail, partnerEmail]);
+          .select('member_id, nickname, mbti, persona, profile, img_url')
+          .in('member_id', [currentEmail, partnerEmail]);
 
         if (memberError || !memberRows || memberRows.length < 2) {
           setErrorMsg('상담 참여자 정보를 불러오는 데 실패했습니다.');
@@ -254,26 +239,9 @@ const CounselorChat = () => {
 
   const fetchChatMessages = async () => {
     if (!cnsl_id || !me?.email) return;
-    const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-    const apiBase = base.endsWith('/api') ? base : base ? `${base}/api` : '';
 
     try {
-      let list = [];
-      list = await fetchFromSupabase();
-      if (list.length === 0 && apiBase) {
-        try {
-          const res = await fetch(`${apiBase}/cnsl/${cnsl_id}/chat`, {
-            headers: { Accept: 'application/json', 'X-User-Email': me.email },
-            mode: 'cors',
-          });
-          if (res.ok) {
-            const data = await res.json();
-            list = Array.isArray(data) ? data : [];
-          }
-        } catch {
-          /* ignore */
-        }
-      }
+      const list = await fetchFromSupabase();
       const mapped = mapApiMessagesToUI(list);
       setChatMessages((prev) => {
         if (mapped.length > 0) return mapped;
@@ -305,7 +273,8 @@ const CounselorChat = () => {
       try {
         const res = await fetch(`${apiBase}/cnsl/${cnsl_id}/stat`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'X-User-Email': me.email },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ cnslStat: stat }),
           mode: 'cors',
         });
@@ -323,7 +292,11 @@ const CounselorChat = () => {
 
   const saveSummaryAndMsgData = async () => {
     const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-    const apiBase = base.endsWith('/api') ? base : base ? `${base}/api` : '';
+    const summarizeUrl =
+      import.meta.env.VITE_SUMMARIZE_API_URL ||
+      (base ? `${base.replace(/\/api$/, '')}/api/summarize` : '') ||
+      'http://localhost:8000/api/summarize';
+
     const basePayload = chatMessages.map((msg) => ({
       type: 'chat',
       speaker: msg.role === 'SYSTEM' ? 'cnsler' : 'user',
@@ -333,80 +306,98 @@ const CounselorChat = () => {
 
     let summaryText = '';
     let summaryLine = '';
-    if (basePayload.length > 0 && apiBase) {
+    let msgDataList = basePayload;
+
+    if (basePayload.length > 0 && summarizeUrl) {
       try {
         const formData = new FormData();
         formData.append('msg_data', JSON.stringify(basePayload));
-        const res = await fetch(`${apiBase}/summarize`, {
+        const res = await fetch(summarizeUrl, {
           method: 'POST',
           body: formData,
           mode: 'cors',
+          credentials: 'include',
         });
         if (res.ok) {
           const data = await res.json();
-          summaryText = (data.summary || '').slice(0, 300);
-          summaryLine = data.summary_line || '';
+          summaryText = (data.summary || '').toString();
+          summaryLine = (data.summary_line || '').toString().trim();
+          const apiMsgData = data.msg_data;
+          if (Array.isArray(apiMsgData) && apiMsgData.length > 0) {
+            msgDataList = apiMsgData.map((item) => ({
+              type: item.type || 'chat',
+              speaker: item.speaker || 'user',
+              text: item.text != null ? String(item.text) : '',
+              timestamp: item.timestamp != null ? String(item.timestamp) : String(Date.now()),
+            }));
+          }
+        } else {
+          console.warn('summarize API 응답 오류:', res.status);
         }
       } catch (err) {
-        console.warn('summarize API 실패, fallback 사용:', err);
+        console.warn('summarize API 실패:', err);
+        return;
       }
     }
-    if (!summaryText || !summaryLine) {
-      const texts = basePayload.filter((x) => x.text && typeof x.text === 'string').map((x) => x.text);
-      const full = texts.join(' ').trim();
-      if (full.length > 300) {
-        const cut = full.slice(0, 297);
-        const lastSpace = cut.lastIndexOf(' ');
-        summaryText = (lastSpace > 200 ? cut.slice(0, lastSpace) : cut) + '...';
-      } else {
-        summaryText = full || `상담 (${new Date().toLocaleString('ko-KR')})`;
-      }
-      summaryText = summaryText.slice(0, 300);
-      const userFirst = basePayload.find((x) => (x.speaker || '').toLowerCase() === 'user')?.text?.trim();
-      const core = userFirst || texts[0] || full;
-      summaryLine = core && core.length > 80 ? core.slice(0, 77) + '...' : core || summaryText.slice(0, 80);
-    }
-    if (!summaryText) {
-      summaryText = `상담 (${new Date().toLocaleString('ko-KR')})`.slice(0, 300);
-      summaryLine = summaryLine || summaryText;
-    }
-    if (!summaryLine) summaryLine = summaryText;
 
-    if (apiBase) {
+    // 요약/메시지 리스트가 없으면 저장 시도하지 않음
+    if (!summaryText || !msgDataList.length) return;
+
+    // summarizeUrl 기준으로 FastAPI(testchatpy) base 추출 → 동일 서버의 /api/cnsl/.../chat/summary-full 호출
+    let apiSaved = false;
+    const summarizeBaseMatch = summarizeUrl.match(/^(.*)\/summarize/);
+    const summarizeBase = summarizeBaseMatch ? summarizeBaseMatch[1] : '';
+    if (summarizeBase) {
       try {
-        const r = await fetch(`${apiBase}/cnsl/${cnsl_id}/chat/summary-full`, {
+        const r = await fetch(`${summarizeBase}/cnsl/${cnsl_id}/chat/summary-full`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-User-Email': me.email ?? '' },
-          body: JSON.stringify({ summary: summaryText, summary_line: summaryLine, msg_data: basePayload }),
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            summary: summaryText,
+            summary_line: summaryLine || undefined,
+            msg_data: msgDataList,
+          }),
           mode: 'cors',
         });
-        if (r.ok) return;
+        if (r.ok) apiSaved = true;
       } catch (err) {
         console.warn('summary-full API 실패:', err);
       }
     }
 
-    const cnslIdNum = parseInt(cnsl_id, 10);
-    if (isNaN(cnslIdNum) || !me || !other) return;
-    const member_id = me.role === 'USER' ? me.email : other.email;
-    const cnsler_id = me.role === 'USER' ? other.email : me.email;
-    const msg_data = { content: basePayload };
-    const summaryPayload = JSON.stringify({ summary: summaryText, summary_line: summaryLine });
-    const { data: existing } = await supabase.from('chat_msg').select('chat_id').eq('cnsl_id', cnslIdNum).maybeSingle();
-    if (existing) {
-      await supabase.from('chat_msg').update({ msg_data, summary: summaryPayload }).eq('cnsl_id', cnslIdNum);
-    } else {
-      await supabase
+    // summary-full API 실패 시 Supabase에 직접 저장 (VisualChat과 동일 패턴)
+    if (!apiSaved) {
+      const cnslIdNum = parseInt(cnsl_id, 10);
+      if (isNaN(cnslIdNum) || !me || !other) return;
+      const member_id = me.role === 'USER' ? me.email : other.email;
+      const cnsler_id = me.role === 'USER' ? other.email : me.email;
+      const msg_data = { content: msgDataList };
+      const summaryPayload = JSON.stringify({ summary: summaryText, summary_line: summaryLine });
+      const { data: existing } = await supabase
         .from('chat_msg')
-        .insert({ cnsl_id: cnslIdNum, member_id, cnsler_id, role: 'user', msg_data, summary: summaryPayload });
+        .select('chat_id')
+        .eq('cnsl_id', cnslIdNum)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from('chat_msg').update({ msg_data, summary: summaryPayload }).eq('cnsl_id', cnslIdNum);
+      } else {
+        await supabase
+          .from('chat_msg')
+          .insert({ cnsl_id: cnslIdNum, member_id, cnsler_id, role: 'user', msg_data, summary: summaryPayload });
+      }
     }
   };
 
   const handleStartCounseling = async () => {
-    if (me?.role !== 'SYSTEM' || cnslStat !== 'A' || isStarting) return;
+    if (cnslStat === 'C' || isStarting || me?.role !== 'SYSTEM') return;
     setIsStarting(true);
     try {
-      await updateCnslStatApi('C');
+      const ok = await updateCnslStatApi('C');
+      if (!ok) setEndError('상담 시작 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    } catch (err) {
+      console.warn('상담 시작 실패:', err);
+      setEndError('상담 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setIsStarting(false);
     }
@@ -511,9 +502,24 @@ const CounselorChat = () => {
       const { error } = await supabase.from('chat_msg').update({ msg_data }).eq('cnsl_id', cnslIdNum);
       return error ? null : { chatId: existing.chat_id };
     }
+
+    const initialSummaryPayload = JSON.stringify({
+      summary: trimmed || '',
+      summary_line: '',
+    });
+
     const { data: inserted, error } = await supabase
       .from('chat_msg')
-      .insert({ cnsl_id: cnslIdNum, member_id, cnsler_id, role: speaker, msg_data })
+      // summary 컬럼 NOT NULL 방어: 초기에는 간단히 첫 메시지 텍스트를 summary로 넣고,
+      // 상담 종료 시 saveSummaryAndMsgData에서 최종 요약(JSON)으로 덮어쓴다.
+      .insert({
+        cnsl_id: cnslIdNum,
+        member_id,
+        cnsler_id,
+        role: speaker,
+        msg_data,
+        summary: initialSummaryPayload,
+      })
       .select('chat_id')
       .single();
     return error ? null : { chatId: inserted?.chat_id };
@@ -532,29 +538,12 @@ const CounselorChat = () => {
     lastLocalAddAtRef.current = now;
     setChatInput('');
 
-    // Supabase 우선 사용 (CORS 등 API 장애 시에도 채팅 정상 작동)
+    // Supabase 우선 사용 (이제는 Supabase만 사용, Spring /api/cnsl/{id}/chat는 제거됨)
     try {
       const ok = await insertChatToSupabase(trimmed);
       if (ok) return;
     } catch (err) {
       console.warn('Supabase 채팅 저장 실패:', err);
-    }
-
-    const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-    const base = apiBase.endsWith('/api') ? apiBase : apiBase ? `${apiBase}/api` : '';
-    const roleForApi = me.role === 'SYSTEM' ? 'counselor' : 'user';
-    if (base) {
-      try {
-        const res = await fetch(`${base}/cnsl/${cnsl_id}/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-User-Email': me.email ?? '' },
-          body: JSON.stringify({ role: roleForApi, content: trimmed }),
-          mode: 'cors',
-        });
-        if (res.ok) return;
-      } catch (err) {
-        console.warn('채팅 API fallback 실패:', err);
-      }
     }
   };
 
@@ -562,8 +551,10 @@ const CounselorChat = () => {
   const peer = other || { nickname: '상담사', profile: '' };
   const infoToShow = other;
   const infoLabel = other?.role === 'SYSTEM' ? '상담사 정보' : '상담자 정보';
-  const isInputDisabled = cnslStat !== 'C' || isEnding;
-  const isBeforeStart = cnslStat === 'A';
+  // 채팅 입력은 C(진행 중)에서만 허용
+  const isInputDisabled = cnslStat !== 'C' || cnslStat === 'E' || cnslStat === 'D' || isEnding || isStarting;
+  // 헤더/안내용 플래그
+  const isBeforeStart = cnslStat === 'A' || cnslStat === 'B';
   const isEnded = cnslStat === 'D';
   const isEndingState = cnslStat === 'E' || isEnding; // E=종료 중 (양쪽 동기화)
 
@@ -631,9 +622,28 @@ const CounselorChat = () => {
             <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-3">
               {infoToShow && (
                 <>
-                  <h2 className="text-base font-semibold text-gray-800 mb-1">{infoLabel}</h2>
-                  <p className="text-sm font-medium text-gray-800">{infoToShow.nickname || infoToShow.email}</p>
-                  {infoToShow.mbti && <p className="text-xs text-[#6b7280]">MBTI: {infoToShow.mbti}</p>}
+                  <h2 className="text-base font-semibold text-gray-800 mb-2">{infoLabel}</h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    {infoToShow.imgUrl ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex-shrink-0">
+                        <img
+                          src={infoToShow.imgUrl}
+                          alt={infoToShow.nickname || infoToShow.email || '프로필'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#e5edff] text-[#2563eb] flex items-center justify-center text-sm font-bold flex-shrink-0">
+                        {(infoToShow.nickname || infoToShow.email || '?').slice(0, 1)}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">{infoToShow.nickname || infoToShow.email}</p>
+                      {infoToShow.mbti && (
+                        <p className="text-xs text-[#6b7280] mt-0.5">MBTI: {infoToShow.mbti}</p>
+                      )}
+                    </div>
+                  </div>
                   {(infoToShow.persona || infoToShow.profile) && (
                     <div className="mt-1 overflow-y-auto text-xs text-[#374151] leading-relaxed">
                       {infoToShow.persona || infoToShow.profile}
@@ -656,8 +666,10 @@ const CounselorChat = () => {
                 <p className="text-sm text-[#6b7280] py-4 text-center">상담 종료 중...</p>
               ) : isStarting ? (
                 <p className="text-sm text-[#6b7280] py-4 text-center">상담 시작 중...</p>
-              ) : isBeforeStart && me?.role === 'USER' ? (
-                <p className="text-sm text-[#6b7280] py-4 text-center">상담 시작까지 조금 기다려 주세요.</p>
+              ) : isBeforeStart ? (
+                <p className="text-sm text-[#6b7280] py-4 text-center">
+                  {me?.role === 'SYSTEM' ? '상담 시작 버튼을 눌러 상담을 시작해 주세요.' : '상담사가 상담을 시작할 때까지 기다려 주세요.'}
+                </p>
               ) : chatMessages.length === 0 ? (
                 <p className="text-xs text-[#9ca3af]">메시지를 입력해 주세요.</p>
               ) : (
@@ -755,10 +767,29 @@ const CounselorChat = () => {
                 <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 text-sm text-[#374151]">
                   {infoToShow && (
                     <>
-                      <p className="font-medium text-gray-800">{infoToShow.nickname || infoToShow.email}</p>
-                      {infoToShow.mbti && <p className="text-[#6b7280] mt-1">MBTI: {infoToShow.mbti}</p>}
+                      <div className="flex items-center gap-3 mb-2">
+                        {infoToShow.imgUrl ? (
+                          <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex-shrink-0">
+                            <img
+                              src={infoToShow.imgUrl}
+                              alt={infoToShow.nickname || infoToShow.email || '프로필'}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-[#e5edff] text-[#2563eb] flex items-center justify-center text-base font-bold flex-shrink-0">
+                            {(infoToShow.nickname || infoToShow.email || '?').slice(0, 1)}
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800">{infoToShow.nickname || infoToShow.email}</p>
+                          {infoToShow.mbti && (
+                            <p className="text-[#6b7280] mt-1 text-sm">MBTI: {infoToShow.mbti}</p>
+                          )}
+                        </div>
+                      </div>
                       {(infoToShow.persona || infoToShow.profile) && (
-                        <p className="mt-2 leading-relaxed whitespace-pre-line">
+                        <p className="mt-1 leading-relaxed whitespace-pre-line">
                           {infoToShow.persona || infoToShow.profile}
                         </p>
                       )}
@@ -782,8 +813,10 @@ const CounselorChat = () => {
                   <p className="text-base text-[#6b7280] py-8 text-center">상담 종료 중...</p>
                 ) : isStarting ? (
                   <p className="text-base text-[#6b7280] py-8 text-center">상담 시작 중...</p>
-                ) : isBeforeStart && me?.role === 'USER' ? (
-                  <p className="text-base text-[#6b7280] py-8 text-center">상담 시작까지 조금 기다려 주세요.</p>
+                ) : isBeforeStart ? (
+                  <p className="text-base text-[#6b7280] py-8 text-center">
+                    {me?.role === 'SYSTEM' ? '상담 시작 버튼을 눌러 상담을 시작해 주세요.' : '상담사가 상담을 시작할 때까지 기다려 주세요.'}
+                  </p>
                 ) : chatMessages.length === 0 ? (
                   <p className="text-sm text-[#9ca3af]">메시지를 입력해 주세요.</p>
                 ) : (

@@ -1,18 +1,18 @@
 /**
  * Spring 백엔드 API 클라이언트 (axios 연동)
  * - 게시판(BBS), 리뷰, 민감키워드/위험게시물, 활동내역
- * - 로그인 연동 전에는 X-User-Id를 'anonymous' 또는 개발용 ID로 전달
+ * - 인증: Spring JWT만 사용. X-User-Email 등 커스텀 헤더 없음 (testchatpy 연동 제거)
  * - 백엔드 주소: .env에 VITE_BACKEND_URL 설정 (기본값 http://localhost:8080)
  */
 
 import axiosInstance, { BACKEND_BASE, getHeaders } from './axiosInstance.js';
 
 async function request(method, path, options = {}) {
-  const { body, userId } = options;
+  const { body } = options;
   const config = {
     method,
     url: path,
-    headers: getHeaders(userId),
+    headers: getHeaders(),
     ...(body != null && { data: body }),
   };
   const res = await axiosInstance.request(config);
@@ -44,15 +44,30 @@ export const bbsApi = {
     return request('DELETE', `/api/bbs/${id}`, { userId });
   },
 
+  /** 응답이 배열이거나 { content / data / result / body } 형태일 때 배열 추출 */
+  _normalizePopularList(data) {
+    if (Array.isArray(data)) return data;
+    if (data == null || typeof data !== 'object') return [];
+    const arr =
+      data.content ?? data.data ?? data.result ?? data.body ?? data.list ?? [];
+    return Array.isArray(arr) ? arr : [];
+  },
+
   getPopularRealtime() {
     return request('GET', '/api/bbs_popularPostRealtimeList?period=realtime').then((data) =>
-      Array.isArray(data) ? data : [],
+      bbsApi._normalizePopularList(data),
     );
   },
 
   getPopularWeekly() {
     return request('GET', '/api/bbs_popularPostWeeklyList?period=week').then((data) =>
-      Array.isArray(data) ? data : [],
+      bbsApi._normalizePopularList(data),
+    );
+  },
+
+  getPopularMonthly() {
+    return request('GET', '/api/bbs_popularPostMonthlyList?period=month').then((data) =>
+      bbsApi._normalizePopularList(data),
     );
   },
 
@@ -62,6 +77,11 @@ export const bbsApi = {
 
   addComment(bbsId, body, userId) {
     return request('POST', `/api/bbs/${bbsId}/comments`, { body, userId });
+  },
+
+  /** 댓글 좋아요(true) / 싫어요(false) */
+  toggleCommentLike(cmtId, body, userId) {
+    return request('POST', `/api/bbs/comments/${cmtId}/like`, { body, userId });
   },
 
   deleteComment(cmtId, userId) {
@@ -84,6 +104,10 @@ export const risksApi = {
     return request('GET', `/api/risks?page=${page}&limit=${limit}`);
   },
 
+  getById(id) {
+    return request('GET', `/api/risks/${id}`);
+  },
+
   getRecent() {
     return request('GET', '/api/risks/recent');
   },
@@ -97,14 +121,14 @@ export const risksApi = {
   },
 };
 
-// ========== 민감 키워드 (Keywords) ==========
+// ========== 민감 키워드 (Keywords) - Spring 백엔드 ==========
 export const keywordsApi = {
   getList() {
-    return request('GET', '/api/keywords');
+    return request('GET', '/api/keywords').then((data) => (Array.isArray(data) ? data : []));
   },
 
   add(body) {
-    return request('POST', '/api/keywords', { body });
+    return request('POST', '/api/keywords', { body }).then((res) => res?.data ?? res);
   },
 
   toggle(id, isActive) {
@@ -167,7 +191,7 @@ export const cnslApi = {
     if (status) q.set('status', status);
 
     const res = await axiosInstance.get(`/api/cnslReg_allList/${encodeURIComponent(cnslerId)}?${q}`, {
-      headers: getHeaders(userId),
+      headers: getHeaders(),
     });
 
     if (res.status === 204) {
@@ -182,7 +206,7 @@ export const cnslApi = {
     const q = new URLSearchParams({ page, size });
 
     const res = await axiosInstance.get(`/api/cnslReg_pendingReservationList/${encodeURIComponent(cnslerId)}?${q}`, {
-      headers: getHeaders(userId),
+      headers: getHeaders(),
     });
 
     if (res.status === 204) {

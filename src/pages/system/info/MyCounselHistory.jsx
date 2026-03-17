@@ -16,32 +16,25 @@ const MyCounselHistory = () => {
   useEffect(() => {
     const fetchCounsels = async () => {
       const data = await fetchCounselsByStatus({
-        page: 0,
-        size: 10,
+        // 백엔드 페이징 사용 (0-based)
+        page: currentPage - 1,
+        size: itemsPerPage,
         status: activeTab,
         cnslerId: email,
       });
 
-      console.log('test', data.content);
-      setCounselHistory(data.content);
+      console.log('counsel history page data', data);
+      setCounselHistory(data);
     };
     fetchCounsels();
   }, [activeTab, currentPage]);
 
-  // 탭별 필터링
-  const filteredCounsels = counselHistory.filter((item) => {
-    if (activeTab === 'B') return item.statusText === '상담 예정';
-    if (activeTab === 'C') return item.statusText === '상담 진행 중';
-    if (activeTab === 'D') return item.statusText === '상담 완료';
-    return true;
-  });
+  // 백엔드에서 status 파라미터로 이미 필터링되므로 별도 statusText 필터는 적용하지 않음
+  const filteredCounsels = counselHistory?.content || [];
 
-  const totalPages = Math.ceil(filteredCounsels.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredCounsels.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  // Spring Page 응답의 totalPages 사용 (없으면 최소 1페이지)
+  const totalPages = counselHistory?.totalPages || 1;
+  const currentItems = filteredCounsels;
 
   // 탭 변경 시 페이지 초기화
   const handleTabChange = (tab) => {
@@ -78,8 +71,37 @@ const MyCounselHistory = () => {
   };
 
   const handleViewDetail = (item) => {
-    // 모든 상담은 상세 페이지로 이동
-    // MyCounselDetail.jsx에서 상태에 따라 다른 화면 렌더링
+    // 상담 시작 시간이 지났고, 수락 상태(B)이며, cnsl_tp가 4(채팅) 또는 5(화상)인 경우
+    try {
+      const now = new Date();
+      // dtTime: "YY.MM.DD HH:MM" 형식이므로 변환
+      const raw = item.dtTime; // 예: "25.03.18 17:00"
+      if (raw) {
+        const [datePart, timePart] = String(raw).split(' ');
+        const [yy, mm, dd] = datePart.split('.').map((v) => parseInt(v, 10));
+        const year = 2000 + (isNaN(yy) ? 0 : yy);
+        const month = isNaN(mm) ? 1 : mm;
+        const day = isNaN(dd) ? 1 : dd;
+        const start = new Date(year, month - 1, day, ...timePart.split(':').map((v) => parseInt(v, 10)));
+
+        const isStarted = start <= now;
+        const isAccepted = item.statusText === '상담 예정' || item.statusText === '상담 진행 중';
+        const tp = item.cnslTp || item.cnsl_tp;
+
+        if (isStarted && isAccepted && (tp === '4' || tp === '5')) {
+          if (tp === '4') {
+            navigate(`/chat/cnslchat/${item.cnslId}`);
+          } else if (tp === '5') {
+            navigate(`/chat/visualchat/${item.cnslId}`);
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('상담 시작 시간 파싱 실패:', e);
+    }
+
+    // 기본: 상담 상세 페이지로 이동
     navigate(`/system/info/counsel/${item.cnslId}`);
   };
 
@@ -246,10 +268,17 @@ const MyCounselHistory = () => {
       <div className="hidden lg:block w-full min-h-screen bg-[#f3f7ff]">
         <div className="max-w-[1520px] mx-auto px-8 py-16">
           {/* HEADER */}
-          <div className="mb-12">
+          <div className="mb-12 flex items-center justify-between">
             <h1 className="text-4xl font-bold text-gray-800">
               내 상담 내역 관리
             </h1>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="cursor-pointer px-8 py-3 rounded-xl bg-[#2563eb] text-white text-base font-normal hover:bg-[#1d4ed8] transition-colors"
+            >
+              뒤로 가기
+            </button>
           </div>
 
           {/* 탭 */}

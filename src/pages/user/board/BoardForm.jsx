@@ -26,11 +26,14 @@ const MBTI_OPTIONS = [
 
 const FONT_OPTIONS = ['Regular', 'Medium', 'SemiBold', 'BM HANNA Pro'];
 const HEADING_OPTIONS = ['본문', '제목1', '제목2', '제목3', '제목4'];
-const SIZE_OPTIONS = ['10px', '12px', '14px', '16px', '18px', '22px', '28px'];
+const SIZE_OPTIONS = ['16px', '18px', '22px', '28px'];
+
+const f_logo =
+  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
 
 const BoardForm = ({ mode = 'write', postId = null }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, uploadPostImage, savePostImage } = useAuth();
   const storeEmail = useAuthStore((s) => s.email);
   const storeNickname = useAuthStore((s) => s.nickname);
   const [boardType, setBoardType] = useState('전체');
@@ -41,10 +44,11 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
   const [content, setContent] = useState('');
   const [font, setFont] = useState('Regular');
   const [heading, setHeading] = useState('본문');
-  const [fontSize, setFontSize] = useState('10px');
+  const [fontSize, setFontSize] = useState('16px');
   const [attachments, setAttachments] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [imageInfo, setImageInfo] = useState({ imgUrl: null, imgName: null });
 
   useEffect(() => {
     if (mode !== 'edit' || !postId) return;
@@ -56,6 +60,10 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
         setContent(b.content ?? '');
         setBoardType(b.bbs_div === 'NOTI' ? '공지' : b.bbs_div === 'FREE' ? '자유' : b.bbs_div === 'MBTI' ? 'MBTI' : '전체');
         setMbtiType(b.mbti ?? '');
+        setImageInfo({
+          imgUrl: b.imgUrl ?? b.img_url ?? null,
+          imgName: b.imgName ?? b.img_name ?? null,
+        });
       })
       .catch(() => { if (!cancelled) setLoadError('글을 불러올 수 없습니다.'); });
     return () => { cancelled = true; };
@@ -69,9 +77,24 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
 
   const selectValue = useMemo(() => (showMbtiSelect ? mbtiType : ''), [mbtiType, showMbtiSelect]);
 
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setAttachments([...attachments, ...files]);
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    setAttachments((prev) => [...prev, ...files]);
+    if (files.length > 0 && uploadPostImage) {
+      try {
+        const res = await uploadPostImage(files[0]);
+        setImageInfo({ imgUrl: res.img_url, imgName: res.img_name });
+      } catch (err) {
+        console.warn('이미지 업로드 실패:', err);
+        alert('이미지 업로드에 실패했습니다. 다시 시도해 주세요.');
+      }
+    }
+  };
+
+  const removeAttachment = (index) => {
+    const next = attachments.filter((_, i) => i !== index);
+    setAttachments(next);
+    if (next.length === 0) setImageInfo({ imgUrl: null, imgName: null });
   };
 
   const getFontFamily = (fontName) => {
@@ -220,10 +243,8 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                           className="w-16 h-16 object-cover rounded"
                         />
                         <button
-                          onClick={() => {
-                            const newAttachments = attachments.filter((_, i) => i !== index);
-                            setAttachments(newAttachments);
-                          }}
+                          type="button"
+                          onClick={() => removeAttachment(index)}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
                         >
                           ✕
@@ -305,10 +326,16 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                 className="px-4 py-2 rounded-md bg-[#2f80ed] hover:bg-[#2670d4] text-white text-sm font-normal transition-colors disabled:opacity-50"
                 onClick={async () => {
                     const bbsDiv = boardType === '공지' ? 'NOTI' : boardType === '자유' ? 'FREE' : boardType === 'MBTI' ? 'MBTI' : 'FREE';
-                    const body = { bbs_div: bbsDiv, mbti: mbtiType || '', title, content };
+                    const body = {
+                      bbs_div: bbsDiv,
+                      mbti: mbtiType || '',
+                      title,
+                      content,
+                      img_url: imageInfo.imgUrl || null,
+                      img_name: imageInfo.imgName || null,
+                    };
                     setSubmitting(true);
                     try {
-                      // Supabase 세션 또는 Spring 로그인(store) 사용자 사용 — Spring은 member_id=email
                       const { data: { user: supaUser } } = await supabase.auth.getUser();
                       const userIdForApi = (supaUser?.email ?? supaUser?.id) ?? storeEmail ?? null;
                       if (!userIdForApi || userIdForApi === 'anonymous') {
@@ -321,7 +348,11 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                       if (mode === 'edit' && postId) {
                         await bbsApi.update(postId, body, userIdForApi);
                       } else {
-                        await bbsApi.create(body, userIdForApi);
+                        const data = await bbsApi.create(body, userIdForApi);
+                        const newBbsId = data?.bbsId ?? data?.data?.bbsId;
+                        if (newBbsId && savePostImage && (imageInfo.imgUrl || imageInfo.imgName)) {
+                          await savePostImage(newBbsId, imageInfo.imgName, imageInfo.imgUrl).catch(() => {});
+                        }
                       }
                       setIsCompleteOpen(true);
                     } catch (e) {
@@ -404,6 +435,7 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                   <div className="flex items-center gap-3 px-4 py-3 text-sm text-gray-600 border-b border-gray-200">
                     <label htmlFor="board-image-pc" className="flex items-center gap-2 cursor-pointer font-normal">
                       <span className="text-xl leading-none">📎</span>
+                      파일 첨부
                     </label>
                     <input
                       id="board-image-pc"
@@ -413,19 +445,6 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                       className="hidden"
                       onChange={handleFileUpload}
                     />
-                    {/* 툴바 아이콘 */}
-                    <button type="button" className="p-1">
-                      <span className="text-xl">≣</span>
-                    </button>
-                    <button type="button" className="p-1">
-                      <span className="text-xl">≣</span>
-                    </button>
-                    <button type="button" className="p-1">
-                      <span className="text-xl">≣</span>
-                    </button>
-                    <button type="button" className="p-1">
-                      <span className="text-xl">≣</span>
-                    </button>
                   </div>
 
                   {/* 첨부된 이미지 미리보기 */}
@@ -439,10 +458,8 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                             className="w-20 h-20 object-cover rounded"
                           />
                           <button
-                            onClick={() => {
-                              const newAttachments = attachments.filter((_, i) => i !== index);
-                              setAttachments(newAttachments);
-                            }}
+                            type="button"
+                            onClick={() => removeAttachment(index)}
                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
                           >
                             ✕
@@ -524,7 +541,14 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                   className="px-8 py-3 rounded-lg bg-[#2f80ed] hover:bg-[#2670d4] text-white text-base font-normal transition-colors disabled:opacity-50"
                   onClick={async () => {
                     const bbsDiv = boardType === '공지' ? 'NOTI' : boardType === '자유' ? 'FREE' : boardType === 'MBTI' ? 'MBTI' : 'FREE';
-                    const body = { bbs_div: bbsDiv, mbti: mbtiType || '', title, content };
+                    const body = {
+                      bbs_div: bbsDiv,
+                      mbti: mbtiType || '',
+                      title,
+                      content,
+                      img_url: imageInfo.imgUrl || null,
+                      img_name: imageInfo.imgName || null,
+                    };
                     setSubmitting(true);
                     try {
                       const { data: { user: supaUser } } = await supabase.auth.getUser();
@@ -539,7 +563,11 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                       if (mode === 'edit' && postId) {
                         await bbsApi.update(postId, body, userIdForApi);
                       } else {
-                        await bbsApi.create(body, userIdForApi);
+                        const data = await bbsApi.create(body, userIdForApi);
+                        const newBbsId = data?.bbsId ?? data?.data?.bbsId;
+                        if (newBbsId && savePostImage && (imageInfo.imgUrl || imageInfo.imgName)) {
+                          await savePostImage(newBbsId, imageInfo.imgName, imageInfo.imgUrl).catch(() => {});
+                        }
                       }
                       setIsCompleteOpen(true);
                     } catch (e) {
@@ -549,8 +577,8 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
                     }
                   }}
                 >
-                  {submitting ? '저장 중...' : '완료'}
-                </button>
+                {submitting ? '저장 중...' : '완료'}
+              </button>
               </div>
             </div>
           </div>
@@ -562,13 +590,7 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/40">
           <div className="relative z-10 w-full max-w-[340px] lg:max-w-[400px] rounded-2xl lg:rounded-3xl bg-white px-6 lg:px-8 py-8 lg:py-10 text-center shadow-2xl">
             <div className="flex items-center justify-center gap-2 mb-4 lg:mb-6">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg lg:text-xl">★</span>
-              </div>
-              <div>
-                <div className="text-xs lg:text-sm text-gray-600 font-normal">Healing Therapy</div>
-                <div className="font-bold text-base lg:text-lg text-gray-800">고민순삭</div>
-              </div>
+              <img src={f_logo} alt="로고" />
             </div>
             <h3 className="text-xl lg:text-[24px] font-bold lg:font-medium mb-3 lg:mb-4 text-gray-800">
               글 작성을 그만두시겠습니까?
@@ -599,13 +621,7 @@ const BoardForm = ({ mode = 'write', postId = null }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/40">
           <div className="relative z-10 w-full max-w-[340px] lg:max-w-[400px] rounded-2xl lg:rounded-3xl bg-white px-6 lg:px-8 py-8 lg:py-10 text-center shadow-2xl">
             <div className="flex items-center justify-center gap-2 mb-4 lg:mb-6">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#2ed3c6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg lg:text-xl">★</span>
-              </div>
-              <div>
-                <div className="text-xs lg:text-sm text-gray-600 font-normal">Healing Therapy</div>
-                <div className="font-bold text-base lg:text-lg text-gray-800">고민순삭</div>
-              </div>
+              <img src={f_logo} alt="로고" />
             </div>
             <h3 className="text-xl lg:text-[24px] font-bold lg:font-medium mb-3 lg:mb-4 text-gray-800">
               {completeTitle}

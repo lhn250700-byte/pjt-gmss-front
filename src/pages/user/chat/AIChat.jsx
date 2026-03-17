@@ -2,15 +2,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import { useAiConsultStore } from '../../../stores/useAiConsultStore';
+import { useAuthStore } from '../../../store/auth.store';
+import { BASE_URL } from '../../../api/config';
+import { getHeaders } from '../../../api/axiosInstance';
+import { createAiCounseling, getActiveAiCnsl } from '../../../api/cnslApi';
 
 // AI 상담: testchatpy API 연동. /chat/withai 또는 /chat/withai/:cnslId
 // GET/POST 반환: msg_data.content 배열 (speaker, text, type, timestamp)
 
-const AI_CHAT_API_BASE = (
-  import.meta.env.VITE_AI_CHAT_API_URL ||
-  import.meta.env.VITE_SUMMARY_API_URL ||
-  'https://testchatpy.onrender.com'
-).replace(/\/$/, '');
+// Spring 백엔드 JWT 인증. /api/ai/chat/* 호출 시 Authorization: Bearer 필요.
+const AI_CHAT_API_BASE = (BASE_URL || '').replace(/\/$/, '');
+const SITE_LOGO_URL =
+  'https://crrxqwzygpifxmzxszdz.supabase.co/storage/v1/object/public/site_img/f_logo.png';
 
 function msgDataContentToMessages(content) {
   if (!Array.isArray(content)) return [];
@@ -30,12 +33,15 @@ const AIChat = () => {
   const [showStartModal, setShowStartModal] = useState(() => !urlCnslId);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const storeEmail = useAuthStore((s) => s.email);
+  const storeLoginStatus = useAuthStore((s) => s.loginStatus);
   const [memberProfile, setMemberProfile] = useState({
     mbti: null,
     persona: null,
   });
   const [showProfileRequiredModal, setShowProfileRequiredModal] = useState(false);
   const [profileCheckDone, setProfileCheckDone] = useState(false);
+  const [activeCheckDone, setActiveCheckDone] = useState(false);
   const [loadingChat, setLoadingChat] = useState(!!cnslId);
   const [messages, setMessages] = useState([]);
   const [cnslInfo, setCnslInfo] = useState(null); // { id, stat, startAt, endAt }
@@ -50,37 +56,33 @@ const AIChat = () => {
   const useAiApi = Boolean(cnslId && AI_CHAT_API_BASE);
   const shouldRedirectToActive = !cnslId && activeCnslId;
 
-  // cnslId 없을 때 DB에서 진행 중(C) AI 상담 조회 → store 보강 (메인/새 탭/리프레시 대비)
+  // cnslId 없을 때: 진행 중 AI 상담 조회 (Spring DB 기준, 재진입 시 리다이렉트)
   useEffect(() => {
-    if (cnslId || !userEmail) return;
+    if (cnslId) {
+      setActiveCheckDone(true);
+      return;
+    }
+    if (!userEmail) {
+      setActiveCheckDone(true);
+      return;
+    }
     (async () => {
       try {
-        const { data } = await supabase
-          .from('cnsl_reg')
-          .select('cnsl_id')
-          .eq('member_id', userEmail)
-          .eq('cnsl_tp', '3')
-          .eq('cnsl_stat', 'C')
-          .order('cnsl_id', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (data?.cnsl_id) {
-          setActiveCnslId(data.cnsl_id);
-        }
+        const activeId = await getActiveAiCnsl();
+        if (activeId != null) setActiveCnslId(activeId);
       } catch {
         /* ignore */
+      } finally {
+        setActiveCheckDone(true);
       }
     })();
   }, [cnslId, userEmail, setActiveCnslId]);
 
   useEffect(() => {
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user?.email) setUserEmail(user.email);
-    })();
-  }, []);
+    // Supabase Auth 미사용. Spring(auth.store)의 이메일만 사용.
+    if (storeLoginStatus && storeEmail) setUserEmail(storeEmail);
+    else setUserEmail('');
+  }, [storeEmail, storeLoginStatus]);
 
   // member 테이블에서 mbti, persona 조회 (상담 참고용) — Supabase public.member 기준 email 컬럼
   useEffect(() => {
@@ -93,13 +95,10 @@ const AIChat = () => {
         const { data, error } = await supabase
           .from('member')
           .select('mbti, persona')
-          .eq('email', userEmail)
+          // public.member PK는 member_id(varchar)=이메일, email 컬럼 없음
+          .eq('member_id', userEmail)
           .maybeSingle();
-        if (error) {
-          setShowProfileRequiredModal(true);
-          setProfileCheckDone(true);
-          return;
-        }
+        if (error) return;
         if (data) {
           const mbtiVal = data.mbti != null ? String(data.mbti).trim() : '';
           const personaVal = data.persona != null ? String(data.persona).trim() : '';
@@ -107,15 +106,14 @@ const AIChat = () => {
             mbti: mbtiVal || null,
             persona: personaVal || null,
           });
-          if (!mbtiVal || !personaVal) {
-            setShowProfileRequiredModal(true);
-          }
         } else {
-          setShowProfileRequiredModal(true);
+          // 프로필 정보가 없어도 AI 상담은 진행 가능
         }
       } catch {
-        setShowProfileRequiredModal(true);
+        // ignore
       } finally {
+        // mbti/persona는 optional. 안내 모달은 띄우지 않음.
+        setShowProfileRequiredModal(false);
         setProfileCheckDone(true);
       }
     })();
@@ -128,7 +126,7 @@ const AIChat = () => {
       try {
         const { data, error } = await supabase
           .from('cnsl_reg')
-          .select('cnsl_id, cnsl_start_time, cnsl_end_time, cnsl_stat')
+          .select('cnsl_id, cnsl_dt, cnsl_start_time, cnsl_end_time, cnsl_stat')
           .eq('cnsl_id', cnslId)
           .maybeSingle();
         if (error) {
@@ -136,11 +134,33 @@ const AIChat = () => {
           return;
         }
         if (!data) return;
+        // cnsl_dt(날짜) + cnsl_start_time/cnsl_end_time(시간)을 조합. 시간만 쓰면 오늘 날짜로 잡혀 자정 넘김(23:13→00:13) 시 endAt이 과거로 인식됨.
+        const parseDateTime = (dateStr, timeStr) => {
+          if (!dateStr || !timeStr) return null;
+          const datePart = String(dateStr).trim().slice(0, 10);
+          const timePart = String(timeStr).trim();
+          const timeMatch = timePart.match(/^(\d{2}):(\d{2}):(\d{2})/);
+          if (!timeMatch) return null;
+          const [_, h, m, s] = timeMatch;
+          const iso = `${datePart}T${h}:${m}:${s}`;
+          const d = new Date(iso);
+          return Number.isNaN(d.getTime()) ? null : d;
+        };
+        const startAt = parseDateTime(data.cnsl_dt, data.cnsl_start_time);
+        let endAt = parseDateTime(data.cnsl_dt, data.cnsl_end_time);
+        if (startAt && endAt && endAt.getTime() <= startAt.getTime()) {
+          endAt = new Date(endAt.getTime() + 24 * 60 * 60 * 1000);
+        }
+        // AI 상담 진입 시 종료 시간이 이미 지났거나 없으면 즉시 종료되지 않도록: 현재+1시간으로 보정
+        const now = Date.now();
+        if (!endAt || endAt.getTime() <= now) {
+          endAt = new Date(now + 60 * 60 * 1000);
+        }
         setCnslInfo({
           id: data.cnsl_id,
           stat: data.cnsl_stat || 'C',
-          startAt: data.cnsl_start_time ? new Date(data.cnsl_start_time) : null,
-          endAt: data.cnsl_end_time ? new Date(data.cnsl_end_time) : null,
+          startAt,
+          endAt,
         });
         if ((data.cnsl_stat || 'C') === 'C') {
           setActiveCnslId(data.cnsl_id);
@@ -152,11 +172,13 @@ const AIChat = () => {
   }, [cnslId]);
 
   useEffect(() => {
-    if (!cnslId || !AI_CHAT_API_BASE || !userEmail) return;
+    if (!cnslId || !AI_CHAT_API_BASE) return;
     (async () => {
       try {
+        const headers = getHeaders();
         const res = await fetch(`${AI_CHAT_API_BASE}/api/ai/chat/${cnslId}`, {
-          headers: { 'X-User-Email': userEmail },
+          credentials: 'include',
+          headers: headers.Authorization ? { Authorization: headers.Authorization } : {},
         });
         if (!res.ok) {
           setLoadingChat(false);
@@ -185,7 +207,7 @@ const AIChat = () => {
         setLoadingChat(false);
       }
     })();
-  }, [cnslId, userEmail]);
+  }, [cnslId]);
 
   const handleSend = async (event) => {
     event.preventDefault();
@@ -207,11 +229,13 @@ const AIChat = () => {
       setMessages((prev) => [...prev, tempUser]);
       setAiThinking(true);
       try {
+        const headers = getHeaders();
         const res = await fetch(`${AI_CHAT_API_BASE}/api/ai/chat/${cnslId}`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-Email': userEmail,
+            ...(headers.Authorization && { Authorization: headers.Authorization }),
           },
           body: JSON.stringify({
             content: trimmed,
@@ -243,19 +267,8 @@ const AIChat = () => {
       return;
     }
 
-    // cnslId 없음: 로컬 인사 1개만 (실제 대화는 testchatpy 연동 시에만)
-    const nextUserMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      text: trimmed,
-    };
-    const nextAiMessage = {
-      id: `ai-${Date.now() + 1}`,
-      role: 'ai',
-      text: '상담을 이용하시려면 로그인 후 AI 상담 링크(상담 ID 포함)로 접속해 주세요.',
-    };
-    setMessages((prev) => [...prev, nextUserMessage, nextAiMessage]);
-    setInput('');
+    // cnslId 없는 상태에서는 먼저 상담을 생성/선택해야 한다.
+    alert('상담을 시작한 뒤 메시지를 보낼 수 있습니다.');
   };
 
   useEffect(() => {
@@ -299,11 +312,13 @@ const AIChat = () => {
       let summaryForCnsl = null;
 
       // 1) msg_data로 AI 요약 생성 후 ai_msg.summary 저장 (반드시 먼저 호출)
-      if (AI_CHAT_API_BASE && userEmail) {
+      if (AI_CHAT_API_BASE) {
         try {
+          const headers = getHeaders();
           const res = await fetch(`${AI_CHAT_API_BASE}/api/ai/chat/${cnslId}/summary`, {
             method: 'POST',
-            headers: { 'X-User-Email': userEmail },
+            credentials: 'include',
+            headers: { ...(headers.Authorization && { Authorization: headers.Authorization }) },
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data) {
@@ -395,52 +410,27 @@ const AIChat = () => {
       return;
     }
 
-    // 새 AI 즉시 상담: cnsl_reg에 한 건 생성 (cnsl_tp=3, 상담사 없이 진행)
+    // 새 AI 즉시 상담: Spring API로 생성 (동일 DB → 마이페이지 목록 노출)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const email = (user?.email || '').trim();
+      const email = (storeLoginStatus ? storeEmail : '').trim();
       if (!email) {
         alert('로그인 후 이용 가능합니다.');
         return;
       }
 
-      const now = new Date();
-      const cnslDt = now.toISOString().slice(0, 10); // YYYY-MM-DD
-      const cnslStartTime = now.toISOString(); // 타임존 포함 ISO 문자열
-      const cnslEndTime = new Date(now.getTime() + 60 * 60 * 1000).toISOString(); // 시작 기준 1시간 후
-
-      const { data, error } = await supabase
-        .from('cnsl_reg')
-        .insert({
-          member_id: email,
-          cnsler_id: null,
-          cnsl_tp: '3', // AI 즉시 상담
-          cnsl_cate: '1', // AI 상담 카테고리 고정
-          cnsl_dt: cnslDt,
-          cnsl_start_time: cnslStartTime,
-          cnsl_end_time: cnslEndTime,
-          cnsl_title: 'AI 즉시 상담',
-          cnsl_content: null, // 종료 시 요약으로 채움
-          cnsl_stat: 'C', // 진행 중
-          cnsl_todo_yn: 'Y',
-        })
-        .select('cnsl_id')
-        .single();
-
-      if (error || !data?.cnsl_id) {
-        console.error('cnsl_reg 생성 실패:', error);
+      const newCnslId = await createAiCounseling();
+      if (newCnslId == null) {
         alert('상담 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
 
-      // 생성된 상담 ID로 라우팅 → /chat/withai/:cnslId 에서 testchatpy와 연동
       setShowStartModal(false);
-      navigate(`/chat/withai/${data.cnsl_id}`, { replace: true });
+      navigate(`/chat/withai/${newCnslId}`, { replace: true });
     } catch (e) {
       console.error('AI 즉시 상담 생성 중 오류:', e);
-      alert('상담 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      const msg = e.response?.data ?? e.message;
+      const text = typeof msg === 'string' ? msg : '상담 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+      alert(text);
     }
   };
 
@@ -468,60 +458,27 @@ const AIChat = () => {
 
   const loading = useAiApi && loadingChat;
 
-  // 프로필 확인 후에만 리다이렉트 (mbti/persona 없을 때 안내 모달을 먼저 보여주기 위함)
-  if (shouldRedirectToActive && profileCheckDone && !showProfileRequiredModal) {
+  // 진행 중 AI 상담이 있으면 프로필 로딩 기다리지 않고 바로 리다이렉트 (재진입 시 모달 방지)
+  if (shouldRedirectToActive && activeCheckDone) {
     return <Navigate to={`/chat/withai/${activeCnslId}`} replace />;
   }
 
   return (
     <>
-      {/* MBTI/페르소나 입력 필요 안내 모달 */}
-      {showProfileRequiredModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <p className="text-center text-gray-800 font-medium leading-relaxed">
-              상담을 위해 MBTI와 자기 소개 정보가 필요합니다. 정보를 입력해 주세요.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={handleProfileRequiredCancel}
-                className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                취소하기
-              </button>
-              <button
-                type="button"
-                onClick={handleProfileRequiredEdit}
-                className="flex-1 rounded-xl bg-[#2563eb] py-3 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
-              >
-                정보수정
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* mbti/persona는 선택 입력. 미입력이어도 상담 진행 */}
 
       {/* MOBILE */}
       <div className="lg:hidden w-full max-w-[390px] min-h-screen mx-auto bg-white flex flex-col">
-        {showStartModal && !(!cnslId && activeCnslId) && (
+        {showStartModal && !cnslId && activeCheckDone && !activeCnslId && userEmail !== '' && (
           <div className="fixed inset-0 bg-white z-50 flex flex-col">
             <header className="bg-[#2563eb] h-14 flex items-center justify-center">
-              <div className="flex items-center gap-2">
-                <span className="text-white text-xl leading-none font-bold">★</span>
-                <span className="text-white text-lg font-bold">고민순삭</span>
-              </div>
+              <img src={SITE_LOGO_URL} alt="고민순삭" className="h-8 w-auto object-contain" />
             </header>
             <div className="flex-1 bg-[#f3f7ff] px-6 py-8 flex flex-col items-center justify-start pt-16">
-              <h2 className="text-2xl font-bold text-gray-800 mb-8">누구와 상담을 하고 싶으세요?</h2>
               <div className="w-full bg-white rounded-3xl shadow-xl p-6 mb-6">
                 <div className="flex flex-col items-center mb-6">
                   <div className="w-20 h-20 mb-4 flex items-center justify-center">
-                    <div className="text-[#2ed3c6] text-5xl">💬</div>
-                  </div>
-                  <div className="text-center mb-2">
-                    <p className="text-sm text-gray-600 mb-1">Healing Therapy</p>
-                    <p className="text-2xl font-bold text-gray-800">고민순삭</p>
+                    <img src={SITE_LOGO_URL} alt="고민순삭" className="w-full h-full object-contain" />
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 text-center mb-4">꼭 확인해 주세요!</h3>
@@ -561,10 +518,10 @@ const AIChat = () => {
                 <p className="text-xs text-gray-600">AI 상담 관련 향상 서비스</p>
                 <p className="text-xs text-gray-500">고민, 커리어, 취업 까지 혼자 고민하지 마세요.</p>
                 <p className="text-xs text-gray-500">
-                  * 고민순삭의 AI상담은 병원, 정신과적 진료가 아닐뿐더러 행동합니다.
+                  ※ 고민순삭의 AI상담은 법적, 정신과적 진단의 처방을 대체하지 않습니다.
                 </p>
                 <p className="text-xs text-gray-500">
-                  AI 상담은 참고용으로 제공되며, 전문 상담사 개입이 필요하다고 생각 경우 즉시 바랍니다.
+                AI 상담은 참고용으로 제공되며, 긴급 상황시 ***109(자살 예방 상담전화)***에 문의 하시기 바랍니다.
                 </p>
                 <p className="text-xs text-gray-500 mt-4">© 2026 고민순삭 All rights reserved.</p>
               </div>
@@ -585,7 +542,9 @@ const AIChat = () => {
           )}
         </header>
         <main className="px-[18px] pt-4 flex-1 overflow-y-auto pb-[132px]">
-          {loading ? (
+          {!cnslId && !activeCheckDone ? (
+            <div className="flex items-center justify-center min-h-[240px] text-gray-500">상담 정보 확인 중...</div>
+          ) : loading ? (
             <div className="flex items-center justify-center min-h-[240px] text-gray-500">불러오는 중...</div>
           ) : (
             <div className="flex flex-col gap-3 pb-6">
@@ -642,16 +601,12 @@ const AIChat = () => {
 
       {/* PC */}
       <div className="hidden lg:flex w-full min-h-screen bg-[#f3f7ff]">
-        {showStartModal && !(!cnslId && activeCnslId) && (
+        {showStartModal && !cnslId && activeCheckDone && !activeCnslId && userEmail !== '' && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-8">
             <div className="bg-white rounded-3xl shadow-2xl max-w-[500px] w-full p-8">
               <div className="flex flex-col items-center mb-6">
                 <div className="w-24 h-24 mb-4 flex items-center justify-center">
-                  <div className="text-[#2ed3c6] text-6xl">💬</div>
-                </div>
-                <div className="text-center mb-2">
-                  <p className="text-base text-gray-600 mb-1">Healing Therapy</p>
-                  <p className="text-3xl font-bold text-gray-800">고민순삭</p>
+                  <img src={SITE_LOGO_URL} alt="고민순삭" className="w-full h-full object-contain" />
                 </div>
               </div>
               <h3 className="text-2xl font-bold text-gray-800 text-center mb-4">꼭 확인해 주세요!</h3>
@@ -736,7 +691,9 @@ const AIChat = () => {
               </div>
             </div>
             <main className="flex-1 overflow-y-auto px-12 py-8 bg-gradient-to-b from-gray-50 to-white">
-              {loading ? (
+              {!cnslId && !activeCheckDone ? (
+                <div className="flex items-center justify-center min-h-[300px] text-gray-500">상담 정보 확인 중...</div>
+              ) : loading ? (
                 <div className="flex items-center justify-center min-h-[300px] text-gray-500">불러오는 중...</div>
               ) : (
                 <div className="flex flex-col gap-6 max-w-[1100px] mx-auto">

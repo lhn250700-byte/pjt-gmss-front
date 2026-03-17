@@ -87,12 +87,6 @@ VITE_SUPABASE_ANON_KEY=sb_publishable__5NLTbiv3t6IgBnNswmimA_qBSsAdJ6
 
 ### USER (일반 사용자)
 
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
-
 - 상담 예약 및 이용
 - 커뮤니티 게시글 작성
 - AI 상담 이용
@@ -100,24 +94,12 @@ VITE_SUPABASE_ANON_KEY=sb_publishable__5NLTbiv3t6IgBnNswmimA_qBSsAdJ6
 
 ### SYSTEM (상담사)
 
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
-
 - 상담 관리
 - 상담 내역 조회
 - 프로필 관리
 - 예약 수락/거절
 
 ### ADMIN (관리자)
-
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
 
 - 사용자 관리
 - 통계 조회
@@ -190,22 +172,10 @@ useEffect(() => {
 
 ### 1. 로그인 후 페이지가 새로고침되면 로그아웃됨
 
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
-
 - 원인: Supabase 세션 관리 문제
 - 해결: 브라우저 쿠키/로컬스토리지 확인
 
 ### 2. 회원가입 후 이메일 인증 필요
-
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
 
 - Supabase는 기본적으로 이메일 인증 필요
 - 테스트 시 Supabase 대시보드에서 이메일 인증 비활성화 가능:
@@ -214,22 +184,10 @@ useEffect(() => {
 
 ### 3. 역할이 올바르게 설정되지 않음
 
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
-
 - `signUp` 함수에서 `metadata.role`이 제대로 전달되는지 확인
 - Supabase 대시보드에서 `user_metadata` 확인
 
 ### 4. 세션이 유지되지 않음
-
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > feature/chat/taegil
 
 - `.env` 파일의 Supabase URL과 KEY 확인
 - HTTPS 사용 여부 확인 (개발 환경에서는 localhost 가능)

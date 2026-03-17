@@ -184,9 +184,7 @@ export default function useAuth() {
   // 로그인 함수
   const signIn = async (email, password) => {
     try {
-      const response = await authApi.post('/api/member/login', null, {
-        params: { email, password },
-      });
+      const response = await authApi.post('/api/auth/login', { username: email, password });
 
       console.log('로그인 테스트 : ', response.data);
 
@@ -252,18 +250,28 @@ export default function useAuth() {
     }
   };
 
-  // 닉네임 중복 확인 함수
+  // 닉네임 중복 확인 함수 (빈 값이면 API 호출하지 않음 — 403/파싱 오류 방지)
   const getmemberInfoNicknameCheckYn = async (nickname) => {
+    const trimmed = nickname != null ? String(nickname).trim() : '';
+    if (!trimmed) {
+      throw new Error('닉네임을 입력해 주세요.');
+    }
     try {
       const { data } = await authApi.get('/api/member_InfoNicknameChk', {
         params: {
-          nickname,
+          nickname: trimmed,
         },
       });
-
       return data;
     } catch (error) {
-      console.error('닉네임 중복 확인 실패', error);
+      const status = error?.response?.status;
+      const msg = error?.response?.data?.message ?? error?.message ?? '서버 연결에 실패했습니다.';
+      if (status >= 500) {
+        console.warn('닉네임 중복 확인 실패: 서버 일시 오류');
+      } else {
+        console.error('닉네임 중복 확인 실패', msg);
+      }
+      throw new Error(status >= 500 ? '서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.' : msg);
     }
   };
 
@@ -303,6 +311,32 @@ export default function useAuth() {
     }
   };
 
+  /** 게시판 글 첨부 이미지: Supabase Storage 업로드 후 public URL 반환 */
+  const uploadPostImage = async (file) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `post/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('profile-images')
+      .upload(filePath, file, { upsert: false });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+    return { img_name: fileName, img_url: data.publicUrl };
+  };
+
+  /** 게시판 글 이미지 URL을 Supabase bbs 테이블에 반영 (Spring이 img 저장하지 않을 때 동기화용) */
+  const savePostImage = async (bbsId, imgName, imgUrl) => {
+    if (bbsId == null) return;
+    const { error } = await supabase
+      .from('bbs')
+      .update({ img_name: imgName ?? null, img_url: imgUrl ?? null })
+      .eq('bbs_id', bbsId);
+    if (error) throw error;
+  };
+
   const editInfo = async (formData) => {
     const { data } = await authApi.patch('/api/mypage/modify', formData);
     return data;
@@ -322,6 +356,8 @@ export default function useAuth() {
     kakaoSignUp,
     uploadProfileImage,
     saveProfileImage,
+    uploadPostImage,
+    savePostImage,
     editInfo,
     getUserInfo,
   };

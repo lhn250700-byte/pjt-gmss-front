@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/auth.store';
+import { BASE_URL } from '../api/config';
+import { normalizeRole } from '../utils/roleUtils';
 
 export const authApi = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true, // refreshToken cookie
+  baseURL: BASE_URL,
+  withCredentials: true, // cross-origin에서 refreshToken 쿠키 전송 필수 (www → api)
 });
 
 authApi.interceptors.request.use((config) => {
@@ -20,32 +22,28 @@ authApi.interceptors.request.use((config) => {
 export const refreshAccessToken = async () => {
   const { setAccessToken, setLoginStatus, setEmail, clearAuth, setNickname, setRoleName } = useAuthStore.getState();
 
-  // try {
-  //   const accessToken = useAuthStore.getState().accessToken;
-  //   const res = await authApi.post('/api/auth/refresh', null, {
-  //     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  //   });
   try {
-    // 주의: 인터셉터가 붙은 authApi 대신 기본 axios를 사용하여
-    // 만료된 토큰이 헤더에 포함되지 않도록 합니다.
-    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`, null, {
-      withCredentials: true,
+    const accessToken = useAuthStore.getState().accessToken;
+    const res = await authApi.post('/api/auth/refresh', null, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
     const data = res.data;
-    console.log('리플래쉬 자료 전송 완료');
-    console.log(data);
-
     setAccessToken(data.accessToken);
     setLoginStatus(true);
     setEmail(data.email);
     setNickname(data.nickname);
-    setRoleName(data.roleNames[0]);
+    setRoleName(normalizeRole(data.roleNames?.[0]));
+    return data.accessToken;
   } catch (error) {
-    // FastAPI(localhost:8000) 미실행 시 ERR_NETWORK 발생 가능 → 경고만 출력
-    if (error?.code === 'ERR_NETWORK') {
-      console.warn('토큰 갱신 스킵 (auth API 연결 불가. VITE_API_BASE_URL 서버가 꺼져 있으면 정상 동작입니다.)');
+    const status = error.response?.status;
+    const serverMessage = error.response?.data?.error || error.response?.data?.message;
+    const isServerError = status >= 500 || status === 502 || status === 503 || status === 504;
+    if (status === 401) {
+      console.warn('토큰 갱신 실패: 로그인이 만료되었거나 refreshToken이 없습니다. 다시 로그인해 주세요.', serverMessage || '');
+    } else if (isServerError) {
+      console.warn('토큰 갱신 실패: 서버 일시 오류. 로그인이 필요할 수 있습니다.');
     } else {
-      console.error('토큰 갱신 실패 : ', error);
+      console.warn('토큰 갱신 실패:', serverMessage || error.message || status);
     }
     clearAuth();
     return null;
@@ -60,6 +58,19 @@ export const signOut = async () => {
     return data;
   } catch (error) {
     console.error('로그아웃 요청 실패 : ', error);
+  } finally {
+    clearAuth();
+  }
+};
+
+export const deleteMember = async () => {
+  const clearAuth = useAuthStore.getState().clearAuth;
+
+  try {
+    const { data } = await authApi.delete('/api/auth/delete');
+    return data;
+  } catch (error) {
+    console.error('회원탈퇴 요청 실패 : ', error);
   } finally {
     clearAuth();
   }

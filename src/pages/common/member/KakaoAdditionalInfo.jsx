@@ -41,34 +41,38 @@ const KakaoAdditionalInfo = () => {
       return;
     }
 
-    const birth = formData.birthdate.replace(/-/g, '');
+    const birthRaw = formData.birthdate.replace(/-/g, '');
+    let birth = null;
+    if (birthRaw) {
+      const birthRegex = /^\d{8}$/;
+      if (!birthRegex.test(birthRaw)) {
+        setError("생년월일은 '-'를 제외한 8자리로 입력해주세요. (예: 20110308)");
+        return;
+      }
 
-    const birthRegex = /^\d{8}$/;
-    if (!birthRegex.test(birth)) {
-      setError("생년월일은 '-'를 제외한 8자리로 입력해주세요. (예: 20110308)");
-      return;
-    }
+      // 실제 날짜 검증
+      const year = Number(birthRaw.substring(0, 4));
+      const month = Number(birthRaw.substring(4, 6));
+      const day = Number(birthRaw.substring(6, 8));
 
-    // 실제 날짜 검증
-    const year = Number(birth.substring(0, 4));
-    const month = Number(birth.substring(4, 6));
-    const day = Number(birth.substring(6, 8));
+      const date = new Date(year, month - 1, day);
 
-    const date = new Date(year, month - 1, day);
+      if (
+        date.getFullYear() !== year ||
+        date.getMonth() + 1 !== month ||
+        date.getDate() !== day
+      ) {
+        setError('존재하지 않는 날짜입니다.');
+        return;
+      }
 
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() + 1 !== month ||
-      date.getDate() !== day
-    ) {
-      setError('존재하지 않는 날짜입니다.');
-      return;
-    }
+      const today = new Date();
+      if (date > today) {
+        setError('미래 날짜는 입력할 수 없습니다.');
+        return;
+      }
 
-    const today = new Date();
-    if (date > today) {
-      setError('미래 날짜는 입력할 수 없습니다.');
-      return;
+      birth = birthRaw;
     }
 
     setLoading(true);
@@ -82,9 +86,9 @@ const KakaoAdditionalInfo = () => {
         nickname: formData.nickname,
         gender: null,
         mbti: formData.mbti || null,
-        birth:
-          formData.birthdate.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3') ||
-          null,
+        birth: birth
+          ? birth.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3')
+          : null,
         persona: formData.introduction || null,
         profile: null,
         text: null,
@@ -153,8 +157,8 @@ const KakaoAdditionalInfo = () => {
         return;
       } else alert('사용 가능한 닉네임입니다.');
     } catch (error) {
-      console.error('nickname duplicate chck error', error.message);
-      alert(error.message);
+      const msg = error?.message ?? '닉네임 확인에 실패했습니다.';
+      alert(msg);
     }
   };
 
@@ -228,7 +232,7 @@ const KakaoAdditionalInfo = () => {
 
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700">
-                생년월일
+                생년월일 (선택)
               </label>
               <input
                 type="text"
@@ -238,8 +242,10 @@ const KakaoAdditionalInfo = () => {
                 placeholder="생년월일을 입력해 주세요 ex]20110308"
                 className="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm focus:outline-none focus:border-[#2f80ed] focus:ring-2 focus:ring-[#2f80ed]/20"
                 disabled={loading}
-                required
               />
+              <p className="text-xs lg:text-sm text-gray-500 mt-1">
+                선택 입력 항목입니다. 입력 시 '-'를 제외한 8자리로 입력해 주세요.
+              </p>
             </div>
 
             <div>
