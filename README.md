@@ -1,17 +1,95 @@
-# React + Vite
+Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+고민순삭은 취업·커리어·일상 고민을 AI 상담과 전문 상담사 상담으로 연결하여, 사용자가 빠르게 고민을 정리하고 다음 행동으로 이어갈 수 있도록 돕는 상담 플랫폼입니다.
 
-Currently, two official plugins are available:
+게시판에서 고민을 공유하고, 필요 시 상담으로 자연스럽게 전환되며, 상담 종료 후에는 요약 및 기록이 남아 재방문 시에도 맥락을 이어갈 수 있도록 설계되었습니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+문제 인식
 
-## React Compiler
+고민 상담 서비스는 다양하게 존재하지만, 사용자가 실제로 겪는 가장 큰 문제는 “어디서부터 시작해야 하는지”와 “상담 이후 무엇을 남길 수 있는지”입니다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+익명 기반 커뮤니티는 접근성이 높지만, 자해나 자살과 같은 민감한 이슈가 함께 존재하며 이를 안전하게 관리할 수 있는 체계가 부족합니다.
 
-## Expanding the ESLint configuration
+또한 상담 이후 기록이 남지 않거나 맥락이 단절되는 경우가 많아, 사용자는 같은 고민을 반복적으로 작성하거나 설명해야 하는 비효율을 겪습니다. 이로 인해 서비스 신뢰도와 재이용 경험이 저하되는 문제가 발생합니다.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-"# pjt-gmss-fr" 
+해결 방안
+
+고민순삭은 게시판 → 상담 예약 → 실시간 상담 → 요약 및 기록으로 이어지는 구조를 통해 고민의 흐름이 끊기지 않도록 설계된 서비스입니다.
+
+AI 상담을 통해 즉시 상담을 시작할 수 있도록 하여 초기 진입 장벽을 낮추고, 필요 시 상담사 상담으로 자연스럽게 연결됩니다.
+
+또한 상담 종료 후 요약 및 기록을 저장하여 사용자가 자신의 고민을 정리하고 이후에도 지속적으로 활용할 수 있도록 하였습니다.
+
+더불어 민감 키워드 감지 기반의 위험 케이스 관리 기능을 통해 커뮤니티의 안전성과 서비스 신뢰도를 확보하고자 했습니다.
+
+🛠️ 기술 스택
+Frontend
+
+React 19.2.0
+Vite 7.2.4
+React Router DOM 7.13.1
+Tailwind CSS 4.1.18
+Zustand 5.0.11
+Axios 1.13.2
+PeerJS 1.5.5
+Supabase JS 2.93.3
+STOMP / SockJS
+TossPayments SDK 2.5.0
+Kakao Maps SDK 1.2.0
+
+Backend / AI
+
+Spring Boot
+Spring Security / JWT / OAuth2
+WebSocket (STOMP)
+FastAPI (AI 상담 / 요약 / 추천)
+PostgreSQL (Supabase)
+
+📋 주요 기능
+1. 직관적인 사용자 경험
+
+헤더 및 하단 네비게이션을 통해 사용자, 상담사, 관리자 역할별 동선을 분리하고 주요 기능에 빠르게 접근할 수 있도록 구성했습니다.
+
+2. 회원 및 인증
+
+JWT 기반 인증과 토큰 갱신을 통해 로그인 상태를 유지하며, 사용자 역할(USER / SYSTEM / ADMIN)에 따라 접근 가능한 기능을 제어합니다.
+
+3. AI 상담
+
+즉시 상담 생성 후 대화를 진행할 수 있으며, 상담 종료 시 자동 요약을 생성하여 기록으로 저장합니다.
+
+상담 시작 전 안내 및 동의 UI를 제공하고, 포인트 차감 기반으로 이용 흐름을 구성했습니다.
+
+4. 상담사 찾기 및 예약
+
+상담사 목록, 상세 정보, 리뷰를 확인할 수 있으며 예약 가능한 시간 조회 및 상담 예약 기능을 제공합니다.
+
+5. 실시간 채팅 및 화상 상담
+
+PeerJS 기반 1:1 화상 상담을 제공하며, 상담 중 채팅 기능을 함께 지원합니다.
+
+상담 종료 후 녹화 다운로드 및 STT 기반 요약 기능을 통해 대화 내용을 정리하고 저장합니다.
+
+6. 커뮤니티 게시판
+
+공지, 자유, MBTI 게시판을 제공하며 검색, 좋아요/싫어요, 댓글 기능을 지원합니다.
+
+실시간 인기글, 주간/월간 인기글, 사용자 기반 추천 게시글 기능을 제공합니다.
+
+7. 위험 키워드 감지
+
+민감 키워드를 기반으로 위험 게시글을 감지하고, 상담사 전용 화면에서 해당 게시글을 확인하고 대응할 수 있도록 구성했습니다.
+
+8. 마이페이지
+
+회원 정보 수정, 상담 내역(진행/예약/완료), 작성 글 및 댓글, 포인트 충전 및 사용 내역을 확인할 수 있습니다.
+
+9. 관리자 기능
+
+상담 건수, 매출, 수수료, 정산 등의 통계 대시보드를 제공하며, 민감 키워드 관리 및 위험 감지 현황을 확인할 수 있습니다.
+
+10. 플로팅 챗봇 ‘순삭이’
+
+서비스 이용 방법을 안내하는 챗봇을 제공하며, 대화 세션과 요약을 저장합니다.
+
+또한 상담 알림(진행 예정/진행 중)과 연동되어 사용자 경험을 보조합니다.
